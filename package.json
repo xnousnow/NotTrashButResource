@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --host",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -33,5 +33,11 @@
     "typescript-eslint": "^8.0.0-alpha.20",
     "vite": "^5.0.3"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/openai": "^0.0.28",
+    "@ai-sdk/svelte": "^0.0.1",
+    "ai": "^3.1.35",
+    "zod": "^3.23.8"
+  }
 }
