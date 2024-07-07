@@ -1,33 +1,45 @@
 <script lang="ts">
-  let image: File | null = null
   let status = 'Waiting for image...'
   let res = {}
 
+  const toBase64 = (file: File) => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
+  const useAPI = async (base64: string) => {
+    let response = {}
+    await fetch('/api/guide', {
+      method: 'POST',
+      body: JSON.stringify({ image: base64 }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then((r) => {
+        status = 'Done'
+        return r.json()
+      })
+      .then((r) => {
+        response = r
+      })
+    return response
+  }
+
   const generate = async (e: Event) => {
     status = 'Converting to base64...'
-    const target = e.target as HTMLInputElement
-    image = target.files ? target.files[0] : null
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const base64 = e.target!.result
-
-      status = 'Generating...'
-      await fetch('/api/guide', {
-        method: 'POST',
-        body: JSON.stringify({ image: base64 }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+    toBase64((e.target as HTMLInputElement).files![0])
+      .then((base64: string) => {
+        status = 'Sending to API...'
+        return useAPI(base64)
       })
-        .then((r) => {
-          status = 'Done'
-          return r.json()
-        })
-        .then((r) => {
-          res = r
-        })
-    }
-    reader.readAsDataURL(image as File)
+      .then((r) => {
+        res = r
+      })
   }
 </script>
 
