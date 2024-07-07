@@ -1,7 +1,7 @@
 <script lang="ts">
   let image: File | null = null
   let status = 'Waiting for image...'
-  let res = ''
+  let res = {}
 
   const generate = async (e: Event) => {
     status = 'Converting to base64...'
