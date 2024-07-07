@@ -21,7 +21,6 @@ export const POST = (async ({ request }) => {
   let names: string[] = data?.map(({ name }) => name) ?? [];
 
   const identifyPrompt = `다음 중 이미지의 물건을 가장 잘 나타내는 항목을 고르세요. \`result\`에는 다음 항목에 있는 물건만 포함하세요. 모든 답변은 한국어로 작성하세요.\n\n> ${names.join(', ')}`
-  console.log(identifyPrompt)
 
   const identifyResult = await generateObject({
     model: openai('gpt-4o'),
@@ -59,8 +58,6 @@ export const POST = (async ({ request }) => {
   // select rows where object.result contains name
   ({ data } = await supabase.from('guidebook').select('*').in('name', identifyResult.object.result!));
   const selectedGuides = data?.map(({ name, guide, tips }) => ({ name, guide, tips }))
-  console.log(identifyResult.object)
-  console.log(selectedGuides)
 
   if (identifyResult.object.issues && Object.keys(identifyResult.object.issues).length > 0) {
     return new Response(JSON.stringify(identifyResult.object))
@@ -85,7 +82,6 @@ export const POST = (async ({ request }) => {
       '',
       markdownGuides.join('\n\n')
     ].join('\n')
-  console.log(finalPrompt)
 
   const result = await generateObject({
     model: openai('gpt-4o'),
