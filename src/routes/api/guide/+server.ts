@@ -11,6 +11,7 @@ const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
 export const POST: RequestHandler = async ({ request }) => {
   const { image } = await request.json()
 
+  // 이름 가져오기
   const { data: guidebookNamesData } = await supabase.from('guidebook').select('name')
   const guidebookNames = guidebookNamesData?.map(({ name }) => name) ?? []
 
@@ -22,6 +23,7 @@ export const POST: RequestHandler = async ({ request }) => {
     `> ${guidebookNames.join(', ')}`
   ].join('\n')
 
+  // 물건 인식하기
   const identificationResult = await generateObject({
     model: openai('gpt-4o'),
     messages: [
@@ -45,19 +47,21 @@ export const POST: RequestHandler = async ({ request }) => {
     })
   })
 
+  // 가이드에서 인식된 물건 찾기
   const { data: selectedGuidesData } = await supabase
     .from('guidebook')
     .select('*')
     .in('name', identificationResult.object.result!)
   const selectedGuides = selectedGuidesData?.map(({ name, guide, tips }) => ({ name, guide, tips }))
 
+  // 오류 처리
   if (
-    identificationResult.object.issues &&
+    identificationResult.object.issues && // 인식 오류
     Object.keys(identificationResult.object.issues).length > 0
   ) {
     return new Response(JSON.stringify(identificationResult.object))
-  } else if (!selectedGuides || selectedGuides.length === 0) {
-    return new Response(JSON.stringify({ supabaseIssue: true }))
+  } else if (!selectedGuides || selectedGuides.length === 0) { // 가이드 없음
+    return new Response(JSON.stringify({ ...identificationResult.object, noGuide: true }))
   }
 
   const formattedGuides = selectedGuides.map(
@@ -77,6 +81,7 @@ export const POST: RequestHandler = async ({ request }) => {
     formattedGuides.join('\n\n')
   ].join('\n')
 
+  // 최종 가이드 생성
   const finalResult = await generateObject({
     model: openai('gpt-4o'),
     messages: [
