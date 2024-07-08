@@ -11,6 +11,36 @@
     })
   }
 
+  const resizeImage = (base64: string, maxWidth: number, maxHeight: number) => {
+    return new Promise<string>((resolve, reject) => {
+      const img = new Image()
+      img.src = base64
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        // Calculate the new dimensions while maintaining the aspect ratio
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height *= maxWidth / width))
+            width = maxWidth
+          } else {
+            width = Math.round((width *= maxHeight / height))
+            height = maxHeight
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx?.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL())
+      }
+      img.onerror = (error) => reject(error)
+    })
+  }
+
   const useAPI = async (base64: string) => {
     let response = {}
     await fetch('/api/guide', {
@@ -32,10 +62,15 @@
 
   const generate = async (e: Event) => {
     status = 'Converting to base64...'
-    toBase64((e.target as HTMLInputElement).files![0])
+    const file = (e.target as HTMLInputElement).files![0]
+    toBase64(file)
       .then((base64: string) => {
+        status = 'Resizing image...'
+        return resizeImage(base64, 512, 512)
+      })
+      .then((resizedBase64: string) => {
         status = 'Sending to API...'
-        return useAPI(base64)
+        return useAPI(resizedBase64)
       })
       .then((r) => {
         res = r
