@@ -1,84 +1,70 @@
 <script lang="ts">
-  let status = 'Waiting for image...'
-  let res = {}
+  import { onMount } from 'svelte'
 
-  const toBase64 = (file: File) => {
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = (error) => reject(error)
-    })
-  }
+  import { fade } from 'svelte/transition'
 
-  const resizeImage = (base64: string, maxWidth: number, maxHeight: number) => {
-    return new Promise<string>((resolve, reject) => {
-      const img = new Image()
-      img.src = base64
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        let width = img.width
-        let height = img.height
+  import Photo from '~icons/material-symbols/Add-Photo-Alternate'
+  import Title from '~icons/material-symbols/Title'
+  import Info from '~icons/material-symbols/Info'
 
-        // Calculate the new dimensions while maintaining the aspect ratio
-        if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height = Math.round((height *= maxWidth / width))
-            width = maxWidth
-          } else {
-            width = Math.round((width *= maxHeight / height))
-            height = maxHeight
-          }
-        }
+  let video: HTMLVideoElement
 
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        ctx?.drawImage(img, 0, 0, width, height)
-        resolve(canvas.toDataURL())
-      }
-      img.onerror = (error) => reject(error)
-    })
-  }
-
-  const useAPI = async (base64: string) => {
-    let response = {}
-    await fetch('/api/guide', {
-      method: 'POST',
-      body: JSON.stringify({ image: base64 }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then((r) => {
-        status = 'Done'
-        return r.json()
+  onMount(() => {
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then((stream) => {
+        video.srcObject = stream
       })
-      .then((r) => {
-        response = r
+      .catch((error) => {
+        console.error('Error accessing the camera', error)
       })
-    return response
-  }
+  })
 
-  const generate = async (e: Event) => {
-    status = 'Converting to base64...'
-    const file = (e.target as HTMLInputElement).files![0]
-    toBase64(file)
-      .then((base64: string) => {
-        status = 'Resizing image...'
-        return resizeImage(base64, 512, 512)
-      })
-      .then((resizedBase64: string) => {
-        status = 'Sending to API...'
-        return useAPI(resizedBase64)
-      })
-      .then((r) => {
-        res = r
-      })
+  let image: File
+  const capture = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob((blob: any) => {
+      image = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+    }, 'image/jpeg')
   }
 </script>
 
-<input type="file" accept="image/*" on:change={(e) => generate(e)} />
-<br />
-{status}
-{JSON.stringify(res)}
+<div class="flex h-[100dvh] w-full flex-col bg-black p-2 text-white">
+  <div class="relative w-full grow overflow-hidden rounded-3xl">
+    <button class="absolute left-3 top-3 z-50">
+      <Info class="h-6 w-6" />
+    </button>
+    {#if image}
+      <img
+        src={URL.createObjectURL(image)}
+        alt="Captured"
+        class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
+        transition:fade={{ duration: 300 }}
+      >
+    {:else}
+      <video
+        bind:this={video}
+        class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
+        muted
+        autoplay
+        transition:fade={{ duration: 300 }}
+      ></video>
+    {/if}
+  </div>
+  <div class="mx-auto flex h-32 w-full max-w-96 items-center justify-around">
+    <button class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+      <Photo class="h-6 w-6" />
+    </button>
+    <button
+      class="h-14 w-14 rounded-full bg-white outline outline-4 outline-offset-2"
+      on:click={capture}
+    ></button>
+    <button class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+      <Title class="h-6 w-6" />
+    </button>
+  </div>
+</div>
