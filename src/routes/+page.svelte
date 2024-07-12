@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
 
   import Photo from '~icons/material-symbols/Add-Photo-Alternate'
+  import Title from '~icons/material-symbols/Title'
   import Info from '~icons/material-symbols/Info'
 
   let video: HTMLVideoElement
@@ -20,9 +21,9 @@
   const capture = () => {}
 </script>
 
-<div class="flex h-[100dvh] w-full flex-col bg-black p-3 text-white">
-  <div class="mb-2 flex items-center justify-between">
-    <button>
+<div class="flex h-[100dvh] w-full flex-col bg-black p-2 text-white">
+  <div class="relative w-full grow overflow-hidden rounded-3xl">
+    <button class="absolute left-3 top-3 z-50">
       <Info class="h-6 w-6" />
     </button>
   </div>
@@ -44,7 +45,7 @@
       on:click={capture}
     ></button>
     <button class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-      <Photo class="h-6 w-6" />
+      <Title class="h-6 w-6" />
     </button>
   </div>
 </div>
