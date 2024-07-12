@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
+  import { fade } from 'svelte/transition'
+
   import Photo from '~icons/material-symbols/Add-Photo-Alternate'
   import Title from '~icons/material-symbols/Title'
   import Info from '~icons/material-symbols/Info'
@@ -18,7 +20,17 @@
       })
   })
 
-  const capture = () => {}
+  let image: File
+  const capture = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob((blob: any) => {
+      image = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+    }, 'image/jpeg')
+  }
 </script>
 
 <div class="flex h-[100dvh] w-full flex-col bg-black p-2 text-white">
@@ -26,15 +38,22 @@
     <button class="absolute left-3 top-3 z-50">
       <Info class="h-6 w-6" />
     </button>
-  </div>
-  <div class="relative w-full grow overflow-hidden rounded-3xl">
-    <video
-      bind:this={video}
-      class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
-      playsinline
-      autoplay
-      muted
-    ></video>
+    {#if image}
+      <img
+        src={URL.createObjectURL(image)}
+        alt="Captured"
+        class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
+        transition:fade={{ duration: 300 }}
+      >
+    {:else}
+      <video
+        bind:this={video}
+        class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
+        muted
+        autoplay
+        transition:fade={{ duration: 300 }}
+      ></video>
+    {/if}
   </div>
   <div class="mx-auto flex h-32 w-full max-w-96 items-center justify-around">
     <button class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
