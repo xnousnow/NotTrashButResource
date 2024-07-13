@@ -72,12 +72,10 @@
     response = await useAPI(resized)
 
     generating = false
-
-    // response = {name: "휴대폰 케이스", guide: ["일반쓰레기로 배출해요.", "잘 씻어요.", "종량제"], tips: ["휴대폰 케이스는 일반쓰레기로 배출해요.", "휴대폰 케이스는 일반쓰레기로 배출해요."]}
   })
 </script>
 
-<div class="flex h-[100dvh] w-full flex-col gap-2 bg-black p-2 text-white">
+<div class="flex h-[100dvh] w-full flex-col space-y-2 bg-black p-2 text-white">
   <a href="/">
     <ArrowBack class="h-6 w-6" />
   </a>
@@ -86,50 +84,50 @@
       src={URL.createObjectURL($image)}
       alt="Captured"
       class="h-full max-h-[30vh] w-full rounded-3xl object-cover"
-      class:generating={generating}
+      class:generating
     />
   {/if}
   {#if generating}
-    <div class="flex flex-col gap-2">
-      <div class="my-1 pl-1 w-48 h-10 bg-white/30 rounded-xl animate-pulse"></div>
+    <div class="space-y-2">
+      <div class="my-1 h-10 w-48 animate-pulse rounded-xl bg-white/30 pl-1"></div>
       {#each ['w-48', 'w-32', 'w-40'] as width}
         <div class="flex gap-2">
-          <div class="w-8 h-7 rounded-full bg-white/30 animate-pulse"></div>
-          <div class="{width} h-7 rounded-lg bg-white/30 animate-pulse"></div>
+          <div class="h-7 w-8 animate-pulse rounded-full bg-white/30"></div>
+          <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
         </div>
       {/each}
-      <div></div>
       {#each ['w-56', 'w-32'] as width}
-        <div class="flex gap-2 items-center">
-          <div class="mx-1 h-2 w-6 rounded-full bg-white/30 animate-pulse"></div>
-          <div class="{width} h-7 rounded-lg bg-white/30 animate-pulse"></div>
+        <div class="flex items-center gap-2">
+          <div class="mx-1 h-2 w-6 animate-pulse rounded-full bg-white/30"></div>
+          <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
         </div>
       {/each}
     </div>
   {:else}
-    <div class="flex flex-col gap-2">
+    <div class="space-y-2">
       <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
-      <ul class="flex flex-col gap-2">
+      <ul class="space-y-2">
         {#each response.guide as step, i}
           <li class="flex items-center gap-2">
             <span
               class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
-              >{i + 1}</span
             >
+              {i + 1}
+            </span>
             <p class="inline">{step}</p>
           </li>
         {/each}
       </ul>
-      <ul class="mt-2 flex flex-col gap-2">
-        {#if response.tips}
+      {#if response.tips}
+        <ul class="mt-2 space-y-2">
           {#each response.tips as tip}
             <li class="flex items-center gap-2">
               <div class="mx-1 h-2 w-6 rounded-full bg-white/20"></div>
               <p class="inline h-7">{tip}</p>
             </li>
           {/each}
-        {/if}
-      </ul>
+        </ul>
+      {/if}
     </div>
   {/if}
 </div>
