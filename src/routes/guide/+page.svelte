@@ -81,12 +81,14 @@
     <ArrowBack class="h-6 w-6" />
   </a>
   {#if $image}
-    <img
-      src={URL.createObjectURL($image)}
-      alt="Captured"
-      class="h-full max-h-[30vh] w-full rounded-3xl object-cover"
-      class:generating
-    />
+    <div class="rounded-3xl overflow-hidden">
+      <img
+        src={URL.createObjectURL($image)}
+        alt="Captured"
+        class="h-full max-h-[30vh] w-full object-cover duration-300"
+        class:generating
+      />
+    </div>
   {/if}
   <div class="relative">
     {#if generating}
@@ -134,3 +136,9 @@
     {/if}
   </div>
 </div>
+
+<style lang="postcss">
+  .generating {
+    @apply opacity-50 blur scale-125;
+  }
+</style>
