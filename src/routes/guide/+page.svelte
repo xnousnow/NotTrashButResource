@@ -7,42 +7,42 @@
   const resizeImage = (file: File, maxWidth: number, maxHeight: number) => {
     return new Promise<string>((resolve, reject) => {
       if (!(file instanceof Blob)) {
-        reject(new TypeError("The provided value is not a Blob or File."));
-        return;
+        reject(new TypeError('The provided value is not a Blob or File.'))
+        return
       }
 
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
       reader.onload = () => {
-        const base64 = reader.result as string;
-        const img = new Image();
-        img.src = base64;
+        const base64 = reader.result as string
+        const img = new Image()
+        img.src = base64
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+          const canvas = document.createElement('canvas')
+          let width = img.width
+          let height = img.height
 
           if (width > maxWidth || height > maxHeight) {
             if (width > height) {
-              height = Math.round((height *= maxWidth / width));
-              width = maxWidth;
+              height = Math.round((height *= maxWidth / width))
+              width = maxWidth
             } else {
-              width = Math.round((width *= maxHeight / height));
-              height = maxHeight;
+              width = Math.round((width *= maxHeight / height))
+              height = maxHeight
             }
           }
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL());
-        };
-        img.onerror = (error) => reject(error);
-      };
-      reader.onerror = (error) => reject(error);
-    });
-  };
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(img, 0, 0, width, height)
+          resolve(canvas.toDataURL())
+        }
+        img.onerror = (error) => reject(error)
+      }
+      reader.onerror = (error) => reject(error)
+    })
+  }
 
   const useAPI = async (base64: string) => {
     let response = {}
@@ -87,11 +87,14 @@
     />
   {/if}
   {#if response && response.name}
-    <h1 class="pl-1 text-4xl font-bold my-1">{response.name}</h1>
+    <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
     <ul class="flex flex-col gap-2">
-      {#each response.guide as step}
-        <li class="flex gap-2 items-center">
-          <span class="w-8 flex justify-center items-center p-0.5 bg-white/20 rounded-full font-semibold">1</span>
+      {#each response.guide as step, i}
+        <li class="flex items-center gap-2">
+          <span
+            class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
+            >{i + 1}</span
+          >
           <p class="inline">{step}</p>
         </li>
       {/each}
@@ -99,8 +102,8 @@
     <ul class="mt-2 flex flex-col gap-2">
       {#if response.tips}
         {#each response.tips as tip}
-          <li class="flex gap-2 items-center">
-            <div class="bg-white/20 rounded-full w-6 h-2 mx-1"></div>
+          <li class="flex items-center gap-2">
+            <div class="mx-1 h-2 w-6 rounded-full bg-white/20"></div>
             <p class="inline">{tip}</p>
           </li>
         {/each}
