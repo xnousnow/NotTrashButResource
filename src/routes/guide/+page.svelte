@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation'
   import { image } from '../../stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
+  import AutoAwesome from '~icons/material-symbols/AutoAwesome'
 
   const resizeImage = (file: File, maxWidth: number, maxHeight: number) => {
     return new Promise<string>((resolve, reject) => {
@@ -81,13 +82,18 @@
     <ArrowBack class="h-6 w-6" />
   </a>
   {#if $image}
-    <div class="rounded-3xl overflow-hidden">
+    <div class="rounded-3xl overflow-hidden relative">
       <img
         src={URL.createObjectURL($image)}
         alt="Captured"
         class="h-full max-h-[30vh] w-full object-cover duration-300"
         class:generating
       />
+      {#if generating}
+        <div class="absolute top-0 left-0 flex justify-center items-center w-full h-full opacity-50" out:blur={{ duration: 300 }}>
+          <AutoAwesome class="h-16 w-16 animate-pulse" />
+        </div>
+      {/if}
     </div>
   {/if}
   <div class="relative">
@@ -139,6 +145,6 @@
 
 <style lang="postcss">
   .generating {
-    @apply opacity-50 blur scale-125;
+    @apply opacity-70 animate-pulse blur scale-110;
   }
 </style>
