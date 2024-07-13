@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
+  import { image } from '../stores'
 
   import { fade } from 'svelte/transition'
 
@@ -20,7 +22,7 @@
       })
   })
 
-  let image: File
+  let imageFile: File
   const capture = () => {
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
@@ -28,7 +30,10 @@
     const ctx = canvas.getContext('2d')
     ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
     canvas.toBlob((blob: any) => {
-      image = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+      imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+      image.set(imageFile)
+
+      goto('/guide')
     }, 'image/jpeg')
   }
 </script>
@@ -38,13 +43,13 @@
     <button class="absolute left-3 top-3 z-50">
       <Info class="h-6 w-6" />
     </button>
-    {#if image}
+    {#if imageFile}
       <img
-        src={URL.createObjectURL(image)}
+        src={URL.createObjectURL(imageFile)}
         alt="Captured"
         class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
         transition:fade={{ duration: 300 }}
-      >
+      />
     {:else}
       <video
         bind:this={video}
