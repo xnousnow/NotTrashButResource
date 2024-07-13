@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { blur } from 'svelte/transition'
   import { goto } from '$app/navigation'
   import { image } from '../../stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
+  import AutoAwesome from '~icons/material-symbols/AutoAwesome'
 
   const resizeImage = (file: File, maxWidth: number, maxHeight: number) => {
     return new Promise<string>((resolve, reject) => {
@@ -80,54 +82,69 @@
     <ArrowBack class="h-6 w-6" />
   </a>
   {#if $image}
-    <img
-      src={URL.createObjectURL($image)}
-      alt="Captured"
-      class="h-full max-h-[30vh] w-full rounded-3xl object-cover"
-      class:generating
-    />
-  {/if}
-  {#if generating}
-    <div class="space-y-2">
-      <div class="my-1 h-10 w-48 animate-pulse rounded-xl bg-white/30 pl-1"></div>
-      {#each ['w-48', 'w-32', 'w-40'] as width}
-        <div class="flex gap-2">
-          <div class="h-7 w-8 animate-pulse rounded-full bg-white/30"></div>
-          <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
+    <div class="rounded-3xl overflow-hidden relative">
+      <img
+        src={URL.createObjectURL($image)}
+        alt="Captured"
+        class="h-full max-h-[30vh] w-full object-cover duration-300"
+        class:generating
+      />
+      {#if generating}
+        <div class="absolute top-0 left-0 flex justify-center items-center w-full h-full opacity-50" out:blur={{ duration: 300 }}>
+          <AutoAwesome class="h-16 w-16 animate-pulse" />
         </div>
-      {/each}
-      {#each ['w-56', 'w-32'] as width}
-        <div class="flex items-center gap-2">
-          <div class="mx-1 h-2 w-6 animate-pulse rounded-full bg-white/30"></div>
-          <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
-        </div>
-      {/each}
-    </div>
-  {:else}
-    <div class="space-y-2">
-      <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
-      <ul class="space-y-2">
-        {#each response.guide as step, i}
-          <li class="flex items-center gap-2">
-            <span
-              class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
-            >
-              {i + 1}
-            </span>
-            <p class="inline">{step}</p>
-          </li>
-        {/each}
-      </ul>
-      {#if response.tips}
-        <ul class="mt-2 space-y-2">
-          {#each response.tips as tip}
-            <li class="flex items-center gap-2">
-              <div class="mx-1 h-2 w-6 rounded-full bg-white/20"></div>
-              <p class="inline h-7">{tip}</p>
-            </li>
-          {/each}
-        </ul>
       {/if}
     </div>
   {/if}
+  <div class="relative">
+    {#if generating}
+      <div class="absolute top-0 left-0 space-y-2" transition:blur={{ duration: 300 }}>
+        <div class="my-1 h-10 w-48 animate-pulse rounded-xl bg-white/30 pl-1"></div>
+        {#each ['w-48', 'w-32', 'w-40'] as width}
+          <div class="flex gap-2">
+            <div class="h-7 w-8 animate-pulse rounded-full bg-white/30"></div>
+            <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
+          </div>
+        {/each}
+        {#each ['w-56', 'w-32'] as width}
+          <div class="flex items-center gap-2">
+            <div class="mx-1 h-2 w-6 animate-pulse rounded-full bg-white/30"></div>
+            <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <div class="absolute top-0 left-0 space-y-2" transition:blur={{ duration: 300 }}>
+        <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
+        <ul class="space-y-2">
+          {#each response.guide as step, i}
+            <li class="flex items-center gap-2">
+              <span
+                class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
+              >
+                {i + 1}
+              </span>
+              <p class="inline">{step}</p>
+            </li>
+          {/each}
+        </ul>
+        {#if response.tips}
+          <ul class="mt-2 space-y-2">
+            {#each response.tips as tip}
+              <li class="flex items-center gap-2">
+                <div class="mx-1 h-2 w-6 rounded-full bg-white/20"></div>
+                <p class="inline h-7">{tip}</p>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
+    {/if}
+  </div>
 </div>
+
+<style lang="postcss">
+  .generating {
+    @apply opacity-70 animate-pulse blur scale-110;
+  }
+</style>
