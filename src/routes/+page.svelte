@@ -51,6 +51,7 @@
         class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
         muted
         autoplay
+        playsinline
         transition:fade={{ duration: 300 }}
       ></video>
     {/if}
