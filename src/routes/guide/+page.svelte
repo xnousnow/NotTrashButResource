@@ -63,13 +63,15 @@
   }
 
   let response: any
+  let generating = true
 
   onMount(async () => {
     if (!$image) await goto('/')
 
     const resized = await resizeImage($image!, 512, 512)
-
     response = await useAPI(resized)
+
+    generating = false
 
     // response = {name: "휴대폰 케이스", guide: ["일반쓰레기로 배출해요.", "잘 씻어요.", "종량제"], tips: ["휴대폰 케이스는 일반쓰레기로 배출해요.", "휴대폰 케이스는 일반쓰레기로 배출해요."]}
   })
@@ -83,31 +85,51 @@
     <img
       src={URL.createObjectURL($image)}
       alt="Captured"
-      class="h-full max-h-[20vh] w-full rounded-3xl object-cover"
+      class="h-full max-h-[30vh] w-full rounded-3xl object-cover"
+      class:generating={generating}
     />
   {/if}
-  {#if response && response.name}
-    <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
-    <ul class="flex flex-col gap-2">
-      {#each response.guide as step, i}
-        <li class="flex items-center gap-2">
-          <span
-            class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
-            >{i + 1}</span
-          >
-          <p class="inline">{step}</p>
-        </li>
+  {#if generating}
+    <div class="flex flex-col gap-2">
+      <div class="my-1 pl-1 w-48 h-10 bg-white/30 rounded-xl animate-pulse"></div>
+      {#each ['w-48', 'w-32', 'w-40'] as width}
+        <div class="flex gap-2">
+          <div class="w-8 h-7 rounded-full bg-white/30 animate-pulse"></div>
+          <div class="{width} h-7 rounded-lg bg-white/30 animate-pulse"></div>
+        </div>
       {/each}
-    </ul>
-    <ul class="mt-2 flex flex-col gap-2">
-      {#if response.tips}
-        {#each response.tips as tip}
+      <div></div>
+      {#each ['w-56', 'w-32'] as width}
+        <div class="flex gap-2 items-center">
+          <div class="mx-1 h-2 w-6 rounded-full bg-white/30 animate-pulse"></div>
+          <div class="{width} h-7 rounded-lg bg-white/30 animate-pulse"></div>
+        </div>
+      {/each}
+    </div>
+  {:else}
+    <div class="flex flex-col gap-2">
+      <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
+      <ul class="flex flex-col gap-2">
+        {#each response.guide as step, i}
           <li class="flex items-center gap-2">
-            <div class="mx-1 h-2 w-6 rounded-full bg-white/20"></div>
-            <p class="inline">{tip}</p>
+            <span
+              class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
+              >{i + 1}</span
+            >
+            <p class="inline">{step}</p>
           </li>
         {/each}
-      {/if}
-    </ul>
+      </ul>
+      <ul class="mt-2 flex flex-col gap-2">
+        {#if response.tips}
+          {#each response.tips as tip}
+            <li class="flex items-center gap-2">
+              <div class="mx-1 h-2 w-6 rounded-full bg-white/20"></div>
+              <p class="inline h-7">{tip}</p>
+            </li>
+          {/each}
+        {/if}
+      </ul>
+    </div>
   {/if}
 </div>
