@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { goto } from '$app/navigation'
-  import { image } from '../stores'
+  import { blur } from 'svelte/transition'
 
   import { fade } from 'svelte/transition'
 
@@ -25,7 +24,7 @@
   let imageFile: File
 </script>
 
-<div class="flex h-[100dvh] w-full flex-col bg-black p-2 text-white">
+<div class="absolute top-0 left-0 flex w-full h-full flex-col p-2" transition:blur>
   <div class="relative w-full grow overflow-hidden rounded-3xl">
     <button class="absolute left-3 top-3 z-50">
       <Info class="h-6 w-6" />
