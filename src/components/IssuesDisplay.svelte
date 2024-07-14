@@ -7,11 +7,9 @@
   import Description from '~icons/material-symbols/Description'
   import BrokenImage from '~icons/material-symbols/BrokenImage'
   import SmartToy from '~icons/material-symbols/SmartToy'
-  import Reply from '~icons/material-symbols/Reply'
+  import PhotoCamera from '~icons/material-symbols/PhotoCamera'
   import Refresh from '~icons/material-symbols/Refresh'
   import SmallButton from './SmallButton.svelte'
-  import ResultDisplay from '$components/ResultDisplay.svelte'
-  import ArrowBack from '~icons/material-symbols/ArrowBack'
 
   export let response: any
   export let error: boolean
@@ -46,7 +44,7 @@
   {/if}
   <div class="flex gap-1.5">
     <SmallButton
-      Icon={ArrowBack}
+      Icon={PhotoCamera}
       action={() => {
         goto('/')
       }}
