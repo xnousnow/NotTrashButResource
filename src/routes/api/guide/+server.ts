@@ -69,7 +69,7 @@ export const POST: RequestHandler = async ({ request }) => {
   } else if (!selectedGuides || selectedGuides.length === 0) {
     // 가이드 없음
     identificationResult.object.issues = { noMatch: true }
-    return new Response(JSON.stringify(identificationResult))
+    return new Response(JSON.stringify(identificationResult.object))
   }
 
   const formattedGuides = selectedGuides.map(
