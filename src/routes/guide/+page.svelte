@@ -8,6 +8,8 @@
   import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
+  import Refresh from '~icons/material-symbols/Refresh'
+  import SmallButton from '$components/SmallButton.svelte'
   import { resizeImage, useAPI } from './processImage'
 
   let response: any
@@ -73,6 +75,17 @@
       <ResultDisplay {response} regenerate={generate} />
     {/if}
   </div>
+  <!--{#if !generating && !error && !response.issues}-->
+  <!--  <div class="w-full">-->
+  <!--    <button-->
+  <!--      class="flex shrink justify-center gap-1.5 rounded-full bg-white/20 pl-3 pr-4 py-2 duration-200 hover:bg-white/30"-->
+  <!--      on:click={generate}-->
+  <!--    >-->
+  <!--      <Refresh class="h-6 w-6" />-->
+  <!--      <span>다른 답변 받기</span>-->
+  <!--    </button>-->
+  <!--  </div>-->
+  <!--{/if}-->
 </div>
 
 <style lang="postcss">
