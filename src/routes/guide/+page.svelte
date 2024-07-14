@@ -6,13 +6,8 @@
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import CloudOff from '~icons/material-symbols/CloudOff'
-  import BrokenImage from '~icons/material-symbols/BrokenImage'
-  import ViewInAr from '~icons/material-symbols/ViewInAr'
-  import ViewInArOff from '~icons/material-symbols/ViewInArOff'
-  import Description from '~icons/material-symbols/Description'
-  import Reply from '~icons/material-symbols/Reply'
-  import SmallButtonLink from '../../components/SmallButtonLink.svelte'
   import ResultDisplay from '../../components/ResultDisplay.svelte'
+  import IssuesDisplay from '../../components/IssuesDisplay.svelte'
 
   const resizeImage = (file: File, maxWidth: number, maxHeight: number) => {
     return new Promise<string>((resolve, reject) => {
@@ -131,32 +126,8 @@
           </div>
         {/each}
       </div>
-    {:else if error}
-      <div class="mt-5 text-white/60 space-y-1 text-center" transition:blur={{ duration: 300 }}>
-        <CloudOff class="h-16 w-16 mx-auto" />
-        <p>결과를 불러오는 데 실패했어요.<br />나중에 다시 시도해 보세요.</p>
-      </div>
-    {:else if response.issues}
-      <div class="mt-5 text-white/60 flex flex-col gap-1 items-center text-center" transition:blur={{ duration: 300 }}>
-        {#if Object.keys(response.issues).length === 0}
-          <BrokenImage class="h-16 w-16 mx-auto" />
-          <p>사진에 여러 문제가 있어요.</p>
-        {:else if response.issues.multipleObjects}
-          <ViewInAr class="h-16 w-16 mx-auto" />
-          <p>사진에 여러 물체가 있어요.</p>
-        {:else if response.issues.noObject}
-          <ViewInArOff class="h-16 w-16 mx-auto" />
-          <p>사진에 물체가 없어요.</p>
-        {:else if response.issues.noMatch}
-          <Description class="h-16 w-16 mx-auto" />
-          {#if response.identified}
-            <p><span class="bg-white/20 rounded px-1 py-0.5">{response.identified}</span>이(가) 인식되었지만<br />정확한 정보를 찾지 못했어요.</p>
-          {:else}
-            <p>물건의 정확한 분리배출 방법을 찾지 못했어요.</p>
-          {/if}
-        {/if}
-        <SmallButtonLink Icon={Reply} text="돌아가기" href='/' />
-      </div>
+    {:else if error || response.issues}
+      <IssuesDisplay response={response} error={error} />
     {:else}
       <ResultDisplay response={response} />
     {/if}
