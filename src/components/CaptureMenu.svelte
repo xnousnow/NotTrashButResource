@@ -1,8 +1,25 @@
 <script lang="ts">
   import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
   import Title from '~icons/material-symbols/Title'
+  import { image } from '../stores'
+  import { goto } from '$app/navigation'
 
-  export let capture: () => void
+  export let imageFile: File
+  export let video: HTMLVideoElement
+
+  const capture = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob((blob: any) => {
+      imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+      image.set(imageFile)
+
+      goto('/guide')
+    }, 'image/jpeg')
+  }
 </script>
 
 <div class="mx-auto flex h-32 w-full max-w-96 items-center justify-around">

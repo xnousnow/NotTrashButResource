@@ -23,19 +23,6 @@
   })
 
   let imageFile: File
-  const capture = () => {
-    const canvas = document.createElement('canvas')
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    const ctx = canvas.getContext('2d')
-    ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
-    canvas.toBlob((blob: any) => {
-      imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
-      image.set(imageFile)
-
-      goto('/guide')
-    }, 'image/jpeg')
-  }
 </script>
 
 <div class="flex h-[100dvh] w-full flex-col bg-black p-2 text-white">
@@ -61,5 +48,5 @@
       ></video>
     {/if}
   </div>
-  <CaptureMenu {capture} />
+  <CaptureMenu {imageFile} {video} />
 </div>
