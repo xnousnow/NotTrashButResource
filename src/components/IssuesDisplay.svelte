@@ -1,16 +1,19 @@
 <script lang="ts">
   import { blur } from 'svelte/transition'
+  import { goto } from '$app/navigation'
   import CloudOff from '~icons/material-symbols/CloudOff'
   import ViewInAr from '~icons/material-symbols/ViewInAr'
   import ViewInArOff from '~icons/material-symbols/ViewInArOff'
   import Description from '~icons/material-symbols/Description'
   import BrokenImage from '~icons/material-symbols/BrokenImage'
   import SmartToy from '~icons/material-symbols/SmartToy'
-  import Reply from '~icons/material-symbols/Reply'
-  import SmallButtonLink from './SmallButtonLink.svelte'
+  import PhotoCamera from '~icons/material-symbols/PhotoCamera'
+  import Refresh from '~icons/material-symbols/Refresh'
+  import SmallButton from './SmallButton.svelte'
 
   export let response: any
   export let error: boolean
+  export let regenerate: () => void
 </script>
 
 <div
@@ -39,5 +42,13 @@
     <SmartToy class="mx-auto h-16 w-16" />
     <p>기타 오류가 발생했어요.</p>
   {/if}
-  <SmallButtonLink Icon={Reply} text="돌아가기" href="/" />
+  <div class="flex gap-1.5">
+    <SmallButton
+      Icon={PhotoCamera}
+      action={() => {
+        goto('/')
+      }}
+    />
+    <SmallButton Icon={Refresh} text="다시 시도" action={regenerate} />
+  </div>
 </div>

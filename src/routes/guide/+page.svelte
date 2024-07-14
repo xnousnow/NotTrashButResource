@@ -8,17 +8,22 @@
   import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
+  import Refresh from '~icons/material-symbols/Refresh'
+  import SmallButton from '$components/SmallButton.svelte'
   import { resizeImage, useAPI } from './processImage'
 
   let response: any
   let generating = true
   let error = false
 
-  onMount(async () => {
-    if (!$image) await goto('/')
+  let resized: string
+
+  const generate = async () => {
+    generating = true
+    error = false
 
     try {
-      const resized = await resizeImage($image!, 512, 512)
+      if (!resized) resized = await resizeImage($image!, 512, 512)
       response = await useAPI(resized)
 
       if (response.message) {
@@ -30,6 +35,12 @@
     } finally {
       generating = false
     }
+  }
+
+  onMount(async () => {
+    if (!$image) await goto('/')
+
+    await generate()
   })
 </script>
 
@@ -59,11 +70,22 @@
     {#if generating}
       <ResultSkeletonLoader />
     {:else if error || response.issues}
-      <IssuesDisplay {response} {error} />
+      <IssuesDisplay {response} {error} regenerate={generate} />
     {:else}
-      <ResultDisplay {response} />
+      <ResultDisplay {response} regenerate={generate} />
     {/if}
   </div>
+  <!--{#if !generating && !error && !response.issues}-->
+  <!--  <div class="w-full">-->
+  <!--    <button-->
+  <!--      class="flex shrink justify-center gap-1.5 rounded-full bg-white/20 pl-3 pr-4 py-2 duration-200 hover:bg-white/30"-->
+  <!--      on:click={generate}-->
+  <!--    >-->
+  <!--      <Refresh class="h-6 w-6" />-->
+  <!--      <span>다른 답변 받기</span>-->
+  <!--    </button>-->
+  <!--  </div>-->
+  <!--{/if}-->
 </div>
 
 <style lang="postcss">
