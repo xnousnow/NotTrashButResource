@@ -1,6 +1,7 @@
 export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
   new Promise<string>((resolve, reject) => {
-    if (!(file instanceof Blob)) return reject(new TypeError('The provided value is not a Blob or File.'))
+    if (!(file instanceof Blob))
+      return reject(new TypeError('The provided value is not a Blob or File.'))
 
     const reader = new FileReader()
     reader.onload = () => {
@@ -32,4 +33,4 @@ export const useAPI = async (base64: string) =>
     method: 'POST',
     body: JSON.stringify({ image: base64 }),
     headers: { 'Content-Type': 'application/json' }
-  }).then(r => r.json())
+  }).then((r) => r.json())

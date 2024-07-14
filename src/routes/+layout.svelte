@@ -2,6 +2,6 @@
   import '../app.css'
 </script>
 
-<div class="bg-black text-white relative w-full h-[100dvh]">
+<div class="relative h-[100dvh] w-full bg-black text-white">
   <slot />
 </div>
