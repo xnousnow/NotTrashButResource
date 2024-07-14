@@ -4,7 +4,7 @@
   export let href: string
 </script>
 
-<a {href} class="pl-2 pr-3 py-1 bg-white/20 rounded-full flex shrink justify-center gap-1 mt-2">
+<a {href} class="mt-2 flex shrink justify-center gap-1 rounded-full bg-white/20 py-1 pl-2 pr-3">
   <Icon class="h-6 w-6" />
   {text}
 </a>
