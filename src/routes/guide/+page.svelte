@@ -14,11 +14,14 @@
   let generating = true
   let error = false
 
-  onMount(async () => {
-    if (!$image) await goto('/')
+  let resized: string
+
+  const generate = async () => {
+    generating = true
+    error = false
 
     try {
-      const resized = await resizeImage($image!, 512, 512)
+      if (!resized) resized = await resizeImage($image!, 512, 512)
       response = await useAPI(resized)
 
       if (response.message) {
@@ -30,6 +33,12 @@
     } finally {
       generating = false
     }
+  }
+
+  onMount(async () => {
+    if (!$image) await goto('/')
+
+    await generate()
   })
 </script>
 
@@ -59,9 +68,9 @@
     {#if generating}
       <ResultSkeletonLoader />
     {:else if error || response.issues}
-      <IssuesDisplay {response} {error} />
+      <IssuesDisplay {response} {error} regenerate={generate} />
     {:else}
-      <ResultDisplay {response} />
+      <ResultDisplay {response} regenerate={generate} />
     {/if}
   </div>
 </div>

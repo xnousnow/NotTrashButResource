@@ -1,7 +1,10 @@
 <script lang="ts">
   import { blur } from 'svelte/transition'
+  import Refresh from '~icons/material-symbols/Refresh'
+  import SmallButton from '$components/SmallButton.svelte'
 
   export let response: any
+  export let regenerate: () => void
 </script>
 
 <div class="absolute left-0 top-0 space-y-2" transition:blur={{ duration: 300 }}>
@@ -28,4 +31,5 @@
       {/each}
     </ul>
   {/if}
+  <SmallButton Icon={Refresh} text="다른 답변 받기" action={regenerate} />
 </div>

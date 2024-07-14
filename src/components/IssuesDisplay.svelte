@@ -8,10 +8,14 @@
   import BrokenImage from '~icons/material-symbols/BrokenImage'
   import SmartToy from '~icons/material-symbols/SmartToy'
   import Reply from '~icons/material-symbols/Reply'
-  import SmallButtonLink from './SmallButton.svelte'
+  import Refresh from '~icons/material-symbols/Refresh'
+  import SmallButton from './SmallButton.svelte'
+  import ResultDisplay from '$components/ResultDisplay.svelte'
+  import ArrowBack from '~icons/material-symbols/ArrowBack'
 
   export let response: any
   export let error: boolean
+  export let regenerate: () => void
 </script>
 
 <div
@@ -40,5 +44,8 @@
     <SmartToy class="mx-auto h-16 w-16" />
     <p>기타 오류가 발생했어요.</p>
   {/if}
-  <SmallButtonLink Icon={Reply} text="돌아가기" action={() => {goto('/')}} />
+  <div class="flex gap-1.5">
+    <SmallButton Icon={ArrowBack} action={() => {goto('/')}} />
+    <SmallButton Icon={Refresh} text="다시 시도" action={regenerate} />
+  </div>
 </div>
