@@ -118,13 +118,13 @@
         <div class="my-1 h-10 w-48 animate-pulse rounded-xl bg-white/30 pl-1"></div>
         {#each ['w-48', 'w-32', 'w-40'] as width}
           <div class="flex gap-2">
-            <div class="h-7 w-8 animate-pulse rounded-full bg-white/30"></div>
+            <div class="h-7 w-8 animate-pulse rounded-full bg-white/30 shrink-0"></div>
             <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
           </div>
         {/each}
         {#each ['w-56', 'w-32'] as width}
           <div class="flex items-center gap-2">
-            <div class="mx-1 h-2 w-6 animate-pulse rounded-full bg-white/30"></div>
+            <div class="mx-1 h-2 w-6 animate-pulse rounded-full bg-white/30 shrink-0"></div>
             <div class="{width} h-7 animate-pulse rounded-lg bg-white/30"></div>
           </div>
         {/each}
@@ -165,7 +165,7 @@
           {#each response.guide as step, i}
             <li class="flex items-center gap-2">
               <span
-                class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
+                class="flex w-8 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold shrink-0"
               >
                 {i + 1}
               </span>
@@ -177,7 +177,7 @@
           <ul class="mt-2 space-y-2">
             {#each response.tips as tip}
               <li class="flex items-center gap-2">
-                <div class="mx-1 h-2 w-6 rounded-full bg-white/20"></div>
+                <div class="mx-1 h-2 w-6 rounded-full bg-white/20 shrink-0"></div>
                 <p class="inline h-7">{tip}</p>
               </li>
             {/each}
