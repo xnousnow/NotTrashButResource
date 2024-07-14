@@ -136,7 +136,7 @@
       </div>
     {:else if response.issues}
       <div class="mt-5 text-white/60 space-y-1 text-center" transition:blur={{ duration: 300 }}>
-        {#if Object.keys(response.issues).length == 0}
+        {#if Object.keys(response.issues).length === 0}
           <BrokenImage class="h-16 w-16 mx-auto" />
           <p>사진에 여러 문제가 있어요.</p>
         {:else if response.issues.multipleObjects}
