@@ -23,7 +23,7 @@
       {#each response.tips as tip}
         <li class="flex items-center gap-2">
           <div class="mx-1 h-2 w-6 shrink-0 rounded-full bg-white/20"></div>
-          <p class="inline h-7">{tip}</p>
+          <p class="inline min-h-7">{tip}</p>
         </li>
       {/each}
     </ul>
