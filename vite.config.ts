@@ -8,5 +8,12 @@ export default defineConfig({
     Icons({
       compiler: 'svelte'
     })
-  ]
+  ],
+  resolve: {
+    alias: {
+      $components: '/src/components',
+      $lib: '/src/lib',
+      $stores: '/src/stores'
+    }
+  }
 })
