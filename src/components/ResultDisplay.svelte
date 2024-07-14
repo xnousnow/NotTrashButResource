@@ -14,7 +14,7 @@
         >
           {i + 1}
         </span>
-        <p class="inline">{step}</p>
+        <p>{step}</p>
       </li>
     {/each}
   </ul>
@@ -23,7 +23,7 @@
       {#each response.tips as tip}
         <li class="flex gap-2">
           <div class="mx-1 mt-2 h-2 w-6 shrink-0 rounded-full bg-white/20"></div>
-          <p class="inline">{tip}</p>
+          <p>{tip}</p>
         </li>
       {/each}
     </ul>
