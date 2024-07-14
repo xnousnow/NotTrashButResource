@@ -60,7 +60,8 @@ export const POST: RequestHandler = async ({ request }) => {
     Object.keys(identificationResult.object.issues).length > 0
   ) {
     return new Response(JSON.stringify(identificationResult.object))
-  } else if (!selectedGuides || selectedGuides.length === 0) { // 가이드 없음
+  } else if (!selectedGuides || selectedGuides.length === 0) {
+    // 가이드 없음
     return new Response(JSON.stringify({ ...identificationResult.object, noGuide: true }))
   }
 
@@ -73,7 +74,7 @@ export const POST: RequestHandler = async ({ request }) => {
     '- 문장에는 해요체 (해요, 예요)를 사용하고 마침표를 찍으세요.',
     '- 사용자가 단계를 따라하기 쉽도록 단계를 나누고, 각 단계에는 한 문장으로 동작을 나타내세요.',
     '- 물건에 따라 분리배출하는 방법이 여러 가지라면 선택되지 않은 방법은 팁에 추가할 수 있어요.',
-    '- 자료를 똑같이 사용하지 말고 **이미지에 맞춰 단계와 팁을 수정**하세요. 예시:',
+    '- 물건의 상태에 따라 필요없는 단계나 문구를 제거하세요. 예시:',
     ' - 이미지 물건이 이미 세척되어 있다면 세척 단계를 제거합니다.',
     ' - 라벨이 없다면 라벨 단계를 제거합니다.',
     ' - 물건과 상관없는 팁을 제거합니다.',
