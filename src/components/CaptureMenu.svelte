@@ -33,15 +33,15 @@
 </script>
 
 <div class="mx-auto flex h-32 w-full max-w-96 items-center justify-around">
-  <label class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/20">
+  <label class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/20 hover:bg-white/30 duration-200">
     <input type="file" accept="image/*" on:change={upload} hidden />
     <AddPhotoAlternate class="h-6 w-6" />
   </label>
   <button
-    class="h-14 w-14 rounded-full bg-white outline outline-4 outline-offset-2"
+    class="h-14 w-14 rounded-full bg-white outline outline-4 outline-offset-2 hover:scale-105 duration-200 active:scale-95 active:outline-offset-4"
     on:click={capture}
   ></button>
-  <button class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+  <button class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 duration-200">
     <Title class="h-6 w-6" />
   </button>
 </div>
