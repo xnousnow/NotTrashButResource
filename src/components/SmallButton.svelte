@@ -5,7 +5,7 @@
 </script>
 
 <button
-  class="mt-2 flex shrink justify-center gap-1 rounded-full bg-white/20 py-1 px-2 duration-200 hover:bg-white/30"
+  class="mt-2 flex shrink justify-center gap-1 rounded-full bg-white/20 px-2 py-1 duration-200 hover:bg-white/30"
   class:pr-3={text}
   on:click={action}
 >

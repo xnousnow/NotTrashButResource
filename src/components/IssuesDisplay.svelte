@@ -45,7 +45,12 @@
     <p>기타 오류가 발생했어요.</p>
   {/if}
   <div class="flex gap-1.5">
-    <SmallButton Icon={ArrowBack} action={() => {goto('/')}} />
+    <SmallButton
+      Icon={ArrowBack}
+      action={() => {
+        goto('/')
+      }}
+    />
     <SmallButton Icon={Refresh} text="다시 시도" action={regenerate} />
   </div>
 </div>
