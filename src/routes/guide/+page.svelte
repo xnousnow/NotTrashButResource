@@ -2,12 +2,12 @@
   import { onMount } from 'svelte'
   import { blur } from 'svelte/transition'
   import { goto } from '$app/navigation'
-  import { image } from '../../stores'
+  import { image } from '$lib/stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
-  import ResultSkeletonLoader from '../../components/ResultSkeletonLoader.svelte'
-  import ResultDisplay from '../../components/ResultDisplay.svelte'
-  import IssuesDisplay from '../../components/IssuesDisplay.svelte'
+  import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
+  import ResultDisplay from '$components/ResultDisplay.svelte'
+  import IssuesDisplay from '$components/IssuesDisplay.svelte'
   import { resizeImage, useAPI } from './processImage'
 
   let response: any

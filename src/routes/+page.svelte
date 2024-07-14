@@ -6,7 +6,7 @@
 
   import Info from '~icons/material-symbols/Info'
 
-  import CaptureMenu from '../components/CaptureMenu.svelte'
+  import CaptureMenu from '$components/CaptureMenu.svelte'
 
   let video: HTMLVideoElement
 

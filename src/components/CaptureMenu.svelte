@@ -1,7 +1,7 @@
 <script lang="ts">
   import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
   import Title from '~icons/material-symbols/Title'
-  import { image } from '../stores'
+  import { image } from '$lib/stores'
   import { goto } from '$app/navigation'
 
   export let imageFile: File
