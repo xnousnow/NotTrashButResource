@@ -7,6 +7,16 @@
   export let imageFile: File
   export let video: HTMLVideoElement
 
+  const upload = (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files[0]) {
+      imageFile = input.files[0]
+      image.set(imageFile)
+
+      goto('/guide')
+    }
+  }
+
   const capture = () => {
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
@@ -23,9 +33,10 @@
 </script>
 
 <div class="mx-auto flex h-32 w-full max-w-96 items-center justify-around">
-  <button class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+  <label class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/20">
+    <input type="file" accept="image/*" on:change={upload} hidden />
     <AddPhotoAlternate class="h-6 w-6" />
-  </button>
+  </label>
   <button
     class="h-14 w-14 rounded-full bg-white outline outline-4 outline-offset-2"
     on:click={capture}
