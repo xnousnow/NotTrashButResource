@@ -130,9 +130,9 @@
         {/each}
       </div>
     {:else if error}
-      <div class="mt-5 text-white/60" transition:blur={{ duration: 300 }}>
+      <div class="mt-5 text-white/60 space-y-1 text-center" transition:blur={{ duration: 300 }}>
         <CloudOff class="h-16 w-16 mx-auto" />
-        <p class="mt-1 text-center">결과를 불러오는 데 실패했어요.<br />나중에 다시 시도해 보세요.</p>
+        <p>결과를 불러오는 데 실패했어요.<br />나중에 다시 시도해 보세요.</p>
       </div>
     {:else if response.issues}
       <div class="mt-5 text-white/60 space-y-1 text-center" transition:blur={{ duration: 300 }}>
