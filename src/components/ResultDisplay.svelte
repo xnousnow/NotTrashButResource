@@ -8,9 +8,9 @@
   <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
   <ul class="space-y-2">
     {#each response.guide as step, i}
-      <li class="flex items-center gap-2">
+      <li class="flex gap-2">
         <span
-          class="flex w-8 shrink-0 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
+          class="flex h-6 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"
         >
           {i + 1}
         </span>
@@ -21,9 +21,9 @@
   {#if response.tips}
     <ul class="mt-2 space-y-2">
       {#each response.tips as tip}
-        <li class="flex items-center gap-2">
-          <div class="mx-1 h-2 w-6 shrink-0 rounded-full bg-white/20"></div>
-          <p class="inline min-h-7">{tip}</p>
+        <li class="flex gap-2">
+          <div class="mx-1 mt-2 h-2 w-6 shrink-0 rounded-full bg-white/20"></div>
+          <p class="inline">{tip}</p>
         </li>
       {/each}
     </ul>
