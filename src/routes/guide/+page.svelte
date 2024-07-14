@@ -33,7 +33,7 @@
   })
 </script>
 
-<div class="flex h-[100dvh] w-full flex-col space-y-2 bg-black p-2 text-white">
+<div class="absolute top-0 left-0 flex w-full h-full flex-col space-y-2 p-2" transition:blur>
   <a href="/">
     <ArrowBack class="h-6 w-6" />
   </a>
