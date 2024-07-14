@@ -1,29 +1,18 @@
-// processImage.ts
-
 export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
   new Promise<string>((resolve, reject) => {
-    if (!(file instanceof Blob)) {
-      reject(new TypeError('The provided value is not a Blob or File.'))
-      return
-    }
+    if (!(file instanceof Blob)) return reject(new TypeError('The provided value is not a Blob or File.'))
 
     const reader = new FileReader()
-    reader.readAsDataURL(file)
     reader.onload = () => {
       const img = new Image()
-      img.src = reader.result as string
       img.onload = () => {
         const canvas = document.createElement('canvas')
         let { width, height } = img
 
         if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height = Math.round((height *= maxWidth / width))
-            width = maxWidth
-          } else {
-            width = Math.round((width *= maxHeight / height))
-            height = maxHeight
-          }
+          const aspectRatio = width / height
+          width = aspectRatio > 1 ? maxWidth : Math.round(maxHeight * aspectRatio)
+          height = aspectRatio > 1 ? Math.round(maxWidth / aspectRatio) : maxHeight
         }
 
         canvas.width = width
@@ -32,14 +21,15 @@ export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
         resolve(canvas.toDataURL())
       }
       img.onerror = reject
+      img.src = reader.result as string
     }
     reader.onerror = reject
+    reader.readAsDataURL(file)
   })
 
-export const useAPI = async (base64: string) => {
-  return await fetch('/api/guide', {
+export const useAPI = async (base64: string) =>
+  fetch('/api/guide', {
     method: 'POST',
     body: JSON.stringify({ image: base64 }),
     headers: { 'Content-Type': 'application/json' }
-  }).then((r) => r.json())
-}
+  }).then(r => r.json())
