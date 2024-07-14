@@ -66,14 +66,24 @@
 
   let response: any
   let generating = true
+  let error = false
 
   onMount(async () => {
     if (!$image) await goto('/')
 
-    const resized = await resizeImage($image!, 512, 512)
-    response = await useAPI(resized)
+    try {
+      const resized = await resizeImage($image!, 512, 512)
+      response = await useAPI(resized)
 
-    generating = false
+      if (response.message) {
+        response = null
+        error = true
+      }
+    } catch {
+      error = true
+    } finally {
+      generating = false
+    }
   })
 </script>
 
@@ -113,7 +123,12 @@
           </div>
         {/each}
       </div>
+    {:else if error}
+      Server Error
+    {:else if response.issues}
+      Identification Issues
     {:else}
+      not error?
       <div class="absolute top-0 left-0 space-y-2" transition:blur={{ duration: 300 }}>
         <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
         <ul class="space-y-2">
