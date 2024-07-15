@@ -66,7 +66,7 @@
       {/if}
     </div>
   {/if}
-  <div class="grow" class:overflow-y-scroll={!generating}>
+  <div class="grow [&::-webkit-scrollbar]:hidden [scrollbar-width:0] [-ms-overflow-style:none]" class:overflow-y-scroll={!generating}>
     <div class="relative">
       {#if generating}
         <ResultSkeletonLoader />
