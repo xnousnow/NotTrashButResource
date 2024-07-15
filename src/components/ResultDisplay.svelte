@@ -7,7 +7,7 @@
   export let regenerate: () => void
 </script>
 
-<div class="absolute left-0 top-0 flex flex-col gap-2 w-full" transition:blur={{ duration: 300 }}>
+<div class="absolute left-0 top-0 flex w-full flex-col gap-2" transition:blur={{ duration: 300 }}>
   <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
   <ul class="space-y-2">
     {#each response.guide as step, i}
