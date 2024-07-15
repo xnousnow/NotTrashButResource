@@ -7,7 +7,7 @@
   export let regenerate: () => void
 </script>
 
-<div class="absolute left-0 top-0 flex flex-col gap-2" transition:blur={{ duration: 300 }}>
+<div class="absolute left-0 top-0 flex flex-col gap-2 w-full" transition:blur={{ duration: 300 }}>
   <h1 class="my-1 pl-1 text-4xl font-bold">{response.name}</h1>
   <ul class="space-y-2">
     {#each response.guide as step, i}
@@ -31,11 +31,7 @@
       {/each}
     </ul>
   {/if}
-  <button
-    class="mx-auto mt-2 flex shrink justify-center gap-1.5 rounded-full bg-white/20 py-2 pl-3 pr-4 duration-200 hover:bg-white/30"
-    on:click={regenerate}
-  >
-    <Refresh class="h-6 w-6" />
-    <span>다른 답변 받기</span>
-  </button>
+  <div class="mx-auto">
+    <SmallButton Icon={Refresh} text="다른 답변 받기" action={regenerate} />
+  </div>
 </div>
