@@ -66,14 +66,16 @@
       {/if}
     </div>
   {/if}
-  <div class="relative">
-    {#if generating}
-      <ResultSkeletonLoader />
-    {:else if error || response.issues}
-      <IssuesDisplay {response} {error} regenerate={generate} />
-    {:else}
-      <ResultDisplay {response} regenerate={generate} />
-    {/if}
+  <div class="grow" class:overflow-y-scroll={!generating}>
+    <div class="relative">
+      {#if generating}
+        <ResultSkeletonLoader />
+      {:else if error || response.issues}
+        <IssuesDisplay {response} {error} regenerate={generate} />
+      {:else}
+        <ResultDisplay {response} regenerate={generate} />
+      {/if}
+    </div>
   </div>
   <!--{#if !generating && !error && !response.issues}-->
   <!--  <div class="w-full">-->
