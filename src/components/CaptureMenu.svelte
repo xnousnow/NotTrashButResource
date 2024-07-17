@@ -1,6 +1,7 @@
 <script lang="ts">
   import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
-  import Title from '~icons/material-symbols/Title'
+  import House from '~icons/material-symbols/House'
+  import Apartment from '~icons/material-symbols/Apartment'
   import { image } from '$lib/stores'
   import { goto } from '$app/navigation'
 
@@ -30,6 +31,8 @@
       goto('/guide')
     }, 'image/jpeg')
   }
+
+  let isApartment = true
 </script>
 
 <div class="mx-auto flex h-32 w-full max-w-96 items-center justify-around">
@@ -45,7 +48,12 @@
   ></button>
   <button
     class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 duration-200 hover:bg-white/30"
+    on:click={() => (isApartment = !isApartment)}
   >
-    <Title class="h-6 w-6" />
+    {#if isApartment}
+      <Apartment class="h-6 w-6" />
+    {:else}
+      <House class="h-6 w-6" />
+    {/if}
   </button>
 </div>
