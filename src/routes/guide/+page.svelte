@@ -2,14 +2,12 @@
   import { onMount } from 'svelte'
   import { blur } from 'svelte/transition'
   import { goto } from '$app/navigation'
-  import { image } from '$lib/stores'
+  import { image, isApartment } from '$lib/stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
-  import Refresh from '~icons/material-symbols/Refresh'
-  import SmallButton from '$components/SmallButton.svelte'
   import { resizeImage, useAPI } from './processImage'
 
   let response: any
@@ -19,12 +17,14 @@
   let resized: string
 
   const generate = async () => {
+    if (!$image) await goto('/')
+
     generating = true
     error = false
 
     try {
       if (!resized) resized = await resizeImage($image!, 512, 512)
-      response = await useAPI(resized)
+      response = await useAPI(resized, $isApartment)
 
       if (response.message) {
         response = null
@@ -38,8 +38,6 @@
   }
 
   onMount(async () => {
-    if (!$image) await goto('/')
-
     await generate()
   })
 </script>
@@ -66,7 +64,10 @@
       {/if}
     </div>
   {/if}
-  <div class="grow [&::-webkit-scrollbar]:hidden [scrollbar-width:0] [-ms-overflow-style:none]" class:overflow-y-scroll={!generating}>
+  <div
+    class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
+    class:overflow-y-scroll={!generating}
+  >
     <div class="relative">
       {#if generating}
         <ResultSkeletonLoader />
