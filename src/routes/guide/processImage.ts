@@ -28,9 +28,9 @@ export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
     reader.readAsDataURL(file)
   })
 
-export const useAPI = async (base64: string) =>
+export const useAPI = async (data: { image: string; isApartment: boolean }) =>
   fetch('/api/guide', {
     method: 'POST',
-    body: JSON.stringify({ image: base64 }),
+    body: JSON.stringify(data),
     headers: { 'Content-Type': 'application/json' }
   }).then((r) => r.json())

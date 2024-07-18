@@ -9,7 +9,7 @@ const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
 
 export const POST: RequestHandler = async ({ request }) => {
-  const { image } = await request.json()
+  const { image, isApartment } = await request.json()
 
   // 이름 가져오기
   const { data: guidebookNamesData } = await supabase.from('guidebook').select('name')
@@ -73,10 +73,11 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   const formattedGuides = selectedGuides.map(
-    ({ name, guide, tips }) => `# ${name}\n\n${guide}\n\n${tips ? `## 팁\n${tips}` : ''}`
+    ({ name, guide, tips }) => `## ${name}\n\n${guide}\n\n${tips ? `### 팁\n${tips}` : ''}`
   )
 
   const finalPrompt = [
+    '### 지시 ###',
     '다음 자료를 참고하여 이미지의 물건을 분리배출하는 방법을 안내하세요.',
     '- 문장에는 해요체 (해요, 예요)를 사용하고 마침표를 찍으세요.',
     '- 사용자가 단계를 따라하기 쉽도록 단계를 나누고, 각 단계에는 한 문장으로 동작을 나타내세요.',
@@ -85,8 +86,13 @@ export const POST: RequestHandler = async ({ request }) => {
     '  - 이미지의 물건이 이미 세척되어 있다면 세척 단계를 제거하세요.',
     '  - 라벨이 없다면 라벨 단계를 제거하세요.',
     '  - 물건과 상관없는 팁을 제거하세요.',
+    '- 무조건 분리하려 시도하지 마세요.',
+    '- 작은 물건은 선별되기 어려워 보통 일반쓰레기로 배출합니다.',
+    '- 만약 다음 자료가 이미지의 물건을 분리배출하는 방법을 잘 설명하지 않거나 물건이 다르다면, `notEnough`를 선택하세요.',
     '',
-    '무조건 분리해 배출하려 시도하지 마세요. 또한 작은 물건은 보통 선별되기 어렵습니다. 만약 다음 자료가 이미지의 물건을 분리배출하는 방법을 잘 설명하지 않거나 물건이 다르다면, `notEnough`를 선택하세요.',
+    '### 자료 ###',
+    `사용자는 ${isApartment ? '아파트' : '단독주택'}에 거주합니다. 다음 자료에서 관련된 정보만 제공하세요.`,
+    '',
     formattedGuides.join('\n\n')
   ].join('\n')
 

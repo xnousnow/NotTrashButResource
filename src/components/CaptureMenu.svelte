@@ -2,7 +2,7 @@
   import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
   import House from '~icons/material-symbols/House'
   import Apartment from '~icons/material-symbols/Apartment'
-  import { image } from '$lib/stores'
+  import { aiInput } from '$lib/stores'
   import { goto } from '$app/navigation'
 
   export let imageFile: File
@@ -12,7 +12,7 @@
     const input = event.target as HTMLInputElement
     if (input.files && input.files[0]) {
       imageFile = input.files[0]
-      image.set(imageFile)
+      aiInput.set({ image: imageFile, isApartment: $aiInput!.isApartment })
 
       goto('/guide')
     }
@@ -26,13 +26,11 @@
     ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
     canvas.toBlob((blob: any) => {
       imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
-      image.set(imageFile)
+      aiInput.set({ image: imageFile, isApartment: $aiInput!.isApartment })
 
       goto('/guide')
     }, 'image/jpeg')
   }
-
-  let isApartment = true
 </script>
 
 <div class="mx-auto flex h-32 w-full max-w-96 items-center justify-around">
@@ -48,9 +46,9 @@
   ></button>
   <button
     class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 duration-200 hover:bg-white/30"
-    on:click={() => (isApartment = !isApartment)}
+    on:click={() => (aiInput.set({ image: null, isApartment: !$aiInput?.isApartment }))}
   >
-    {#if isApartment}
+    {#if $aiInput?.isApartment}
       <Apartment class="h-6 w-6" />
     {:else}
       <House class="h-6 w-6" />
