@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { blur } from 'svelte/transition'
   import { goto } from '$app/navigation'
-  import { aiInput } from '$lib/stores'
+  import { image, isApartment } from '$lib/stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
@@ -16,21 +16,15 @@
 
   let resized: string
 
-  let image = $aiInput?.image
-  let isApartment = $aiInput?.isApartment
-
   const generate = async () => {
-    if (!image) await goto('/')
+    if (!$image) await goto('/')
 
     generating = true
     error = false
 
     try {
-      if (!resized) resized = await resizeImage(image!, 512, 512)
-      response = await useAPI({
-        image: resized!,
-        isApartment: isApartment!
-      })
+      if (!resized) resized = await resizeImage($image!, 512, 512)
+      response = await useAPI(resized, $isApartment)
 
       if (response.message) {
         response = null
@@ -52,10 +46,10 @@
   <a href="/">
     <ArrowBack class="h-6 w-6" />
   </a>
-  {#if image}
+  {#if $image}
     <div class="relative overflow-hidden rounded-3xl">
       <img
-        src={URL.createObjectURL(image)}
+        src={URL.createObjectURL($image)}
         alt="Captured"
         class="h-full max-h-[30vh] w-full object-cover duration-300"
         class:generating
