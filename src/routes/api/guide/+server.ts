@@ -16,11 +16,11 @@ export const POST: RequestHandler = async ({ request }) => {
   const guidebookNames = guidebookNamesData?.map(({ name }) => name) ?? []
 
   const identificationPrompt = [
-    '다음 중 이미지의 물건을 가장 잘 나타내는 항목을 고르세요.',
-    '- `result`에는 다음 항목에 있는 물건만 포함하세요.',
-    '- 모든 답변은 한국어로 작성하세요.',
+    '당신은 사용자의 분리배출을 도와야 합니다. 입력된 사진은 사용자가 분리배출을 원하는 물건입니다. 다음 목록은 분리배출 가이드에서 찾아볼 수 있는 물건들입니다. 물건을 분리배출하기 위해 참고해야 할 항목을 찾으세요. 만약 직접적인 항목이 없다면 재질을 선택하세요. 플라스틱과 비닐을 구분하세요. **답변은 모두 한국어로 작성하세요.**',
     '',
-    `> ${guidebookNames.join(', ')}`
+    `> ${guidebookNames.join(', ')}`,
+    '',
+    ''
   ].join('\n')
 
   // 물건 인식하기
@@ -36,7 +36,7 @@ export const POST: RequestHandler = async ({ request }) => {
           z
             .string()
             .describe(
-              '위 중 이미지의 물건을 가장 잘 나타내는 항목, 재질 등이 다르다면 noMatch를 선택하세요'
+              '위 중 이미지의 물건을 가장 잘 나타내는 항목'
             )
         )
         .max(2)
@@ -50,7 +50,8 @@ export const POST: RequestHandler = async ({ request }) => {
         })
         .optional()
         .describe('result가 없을 때, 이미지를 인식할 수 없을 때')
-    })
+    }),
+    temperature: 0.8
   })
 
   // 가이드에서 인식된 물건 찾기
@@ -73,32 +74,19 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   const formattedGuides = selectedGuides.map(
-    ({ name, guide, tips }) => `## ${name}\n\n${guide}\n\n${tips ? `### 팁\n${tips}` : ''}`
+    ({ name, guide, tips }) =>
+      `## ${name}\n${guide.split('\n').map((line: string, index: number) => `${index + 1}. ${line}`).join('\n')}\n\n${tips ? `### 팁\n${tips.split('\n').join('\n- ')}` : ''}`
   )
 
   const finalPrompt = [
-    '### 지시 ###',
-    '다음 자료를 참고하여 이미지의 물건을 분리배출하는 방법을 안내하세요.',
-    '- 문장에는 해요체 (해요, 예요)를 사용하고 마침표를 찍으세요.',
-    '- 사용자가 단계를 따라하기 쉽도록 단계를 나누고, 각 단계에는 한 문장으로 동작을 나타내세요.',
-    '- 물건에 따라 분리배출하는 방법이 여러 가지라면 선택되지 않은 방법은 팁에 추가하세요.',
-    '- 물건의 상태에 따라 필요없는 단계나 문구를 제거하세요. 예시:',
-    '  - 이미지의 물건이 이미 세척되어 있다면 세척 단계를 제거하세요.',
-    '  - 라벨이 없다면 라벨 단계를 제거하세요.',
-    '  - 물건과 상관없는 팁을 제거하세요.',
-    '- 무조건 분리하려 시도하지 마세요.',
-    '- 작은 물건은 선별되기 어려워 보통 일반쓰레기로 배출합니다.',
-    '- 만약 다음 자료가 이미지의 물건을 분리배출하는 방법을 잘 설명하지 않거나 물건이 다르다면, `notEnough`를 선택하세요.',
+    `당신은 사용자의 분리배출을 도와야 합니다. 입력된 사진은 사용자가 분리배출을 원하는 물건입니다. 다음 정보를 그대로 출력하되, 사용자의 주거 환경에 맞지 않거나 이미지에 따라 필요없는 단계를 제거하세요. 사용자는 **${isApartment ? '아파트' : '주택'}**에 살고 있습니다. 최대한 원 형태를 보존하려 노력하세요.`,
     '',
-    '### 자료 ###',
-    `사용자는 ${isApartment ? '아파트' : '단독주택'}에 거주합니다. 다음 자료에서 관련된 정보만 제공하세요.`,
-    '',
-    formattedGuides.join('\n\n')
+    formattedGuides.join('\n')
   ].join('\n')
 
   // 최종 가이드 생성
   const finalResult = await generateObject({
-    model: openai('gpt-4o'),
+    model: openai('gpt-4o-mini'),
     messages: [
       { role: 'system', content: finalPrompt },
       { role: 'user', content: [{ type: 'image', image }] }
@@ -113,7 +101,8 @@ export const POST: RequestHandler = async ({ request }) => {
         .boolean()
         .optional()
         .describe('자료가 이미지의 물건을 분리배출하는 방법을 잘 설명하지 않음')
-    })
+    }),
+    temperature: 0.5
   })
 
   if (finalResult.object.notEnough) {
