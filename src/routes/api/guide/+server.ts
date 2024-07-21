@@ -25,7 +25,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   // 물건 인식하기
   const identificationResult = await generateObject({
-    model: openai('gpt-4o'),
+    model: openai(env.IMAGE_IDENTIFICATION_MODEL ?? 'gpt-4o'),
     messages: [
       { role: 'system', content: identificationPrompt },
       { role: 'user', content: [{ type: 'image', image }] }
@@ -86,7 +86,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   // 최종 가이드 생성
   const finalResult = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: openai(env.GUIDE_GENERATION_MODEL ?? 'gpt-4o'),
     messages: [
       { role: 'system', content: finalPrompt },
       { role: 'user', content: [{ type: 'image', image }] }
