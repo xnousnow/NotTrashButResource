@@ -18,6 +18,8 @@
       })
       .catch((error) => {
         console.error('Error accessing the camera', error)
+        alert(error)
+        alert(video.srcObject)
       })
   }
 
