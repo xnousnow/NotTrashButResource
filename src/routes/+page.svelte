@@ -10,7 +10,7 @@
 
   let video: HTMLVideoElement
 
-  onMount(() => {
+  const startCam = () => {
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
       .then((stream) => {
@@ -19,10 +19,21 @@
       .catch((error) => {
         console.error('Error accessing the camera', error)
       })
+  }
+
+  const restartCam = () => {
+    video.srcObject = null
+    startCam()
+  }
+
+  onMount(() => {
+    startCam()
   })
 
   let imageFile: File
 </script>
+
+<svelte:window on:focus={restartCam}></svelte:window>
 
 <div class="absolute left-0 top-0 flex h-full w-full flex-col p-2" transition:blur>
   <div class="relative w-full grow overflow-hidden rounded-3xl">
