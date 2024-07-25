@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { blur } from 'svelte/transition'
-
-  import { fade } from 'svelte/transition'
+  import { onMount, onDestroy } from 'svelte'
+  import { blur, fade } from 'svelte/transition'
 
   import Info from '~icons/material-symbols/Info'
-
   import CaptureMenu from '$components/CaptureMenu.svelte'
 
   let video: HTMLVideoElement
+  let imageFile: File
 
   const startCam = () => {
     navigator.mediaDevices
@@ -18,24 +16,44 @@
       })
       .catch((error) => {
         console.error('Error accessing the camera', error)
-        alert(error)
-        alert(video.srcObject)
+        alert('Unable to access camera. Please check your permissions.')
       })
   }
 
   const restartCam = () => {
-    video.srcObject = null
+    if (video?.srcObject) {
+      ;(video.srcObject as MediaStream).getTracks().forEach((track) => track.stop())
+    }
     startCam()
+  }
+
+  const handleVisibilityChange = () => {
+    if (document?.hidden) {
+      if (video?.srcObject) {
+        ;(video.srcObject as MediaStream).getTracks().forEach((track) => track.stop())
+      }
+    } else {
+      restartCam()
+    }
+  }
+
+  const handleFocus = () => {
+    restartCam()
   }
 
   onMount(() => {
     startCam()
   })
 
-  let imageFile: File
+  onDestroy(() => {
+    if (video?.srcObject) {
+      ;(video.srcObject as MediaStream).getTracks().forEach((track) => track.stop())
+    }
+  })
 </script>
 
-<svelte:window on:focus={restartCam}></svelte:window>
+<svelte:window on:focus={handleFocus} />
+<svelte:document on:visibilitychange={handleVisibilityChange} />
 
 <div class="absolute left-0 top-0 flex h-full w-full flex-col p-2" transition:blur>
   <div class="relative w-full grow overflow-hidden rounded-3xl">
