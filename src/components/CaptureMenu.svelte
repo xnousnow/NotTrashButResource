@@ -1,8 +1,10 @@
 <script lang="ts">
   import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
-  import Title from '~icons/material-symbols/Title'
-  import { image } from '$lib/stores'
+  import House from '~icons/material-symbols/House'
+  import Apartment from '~icons/material-symbols/Apartment'
+  import { image, isApartment, localStorageLoaded } from '$lib/stores'
   import { goto } from '$app/navigation'
+  import { blur } from 'svelte/transition'
 
   export let imageFile: File
   export let video: HTMLVideoElement
@@ -44,8 +46,19 @@
     on:click={capture}
   ></button>
   <button
-    class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 duration-200 hover:bg-white/30"
+    class="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/20 duration-200 hover:bg-white/30"
+    on:click={() => isApartment.set(!$isApartment)}
   >
-    <Title class="h-6 w-6" />
+    {#if !$localStorageLoaded}
+      <div transition:blur={{ duration: 200, amount: 2 }} class="absolute"></div>
+    {:else if $isApartment}
+      <div transition:blur={{ duration: 200, amount: 2 }} class="absolute">
+        <Apartment class="h-6 w-6" />
+      </div>
+    {:else}
+      <div transition:blur={{ duration: 200, amount: 2 }} class="absolute">
+        <House class="h-6 w-6" />
+      </div>
+    {/if}
   </button>
 </div>
