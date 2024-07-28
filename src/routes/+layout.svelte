@@ -5,8 +5,8 @@
   import { goto } from '$app/navigation'
 
   onMount(() => {
-    if (!$image) goto('/')
-    if ($didOnboarding) goto('/onboarding')
+    if (!$didOnboarding) goto('/onboarding')
+    else if (!$image) goto('/')
     console.log($didOnboarding)
   })
 </script>
