@@ -6,7 +6,7 @@ export const didOnboarding = writable(false)
 export const localStorageLoaded = writable(false)
 
 if (typeof window !== 'undefined') {
-  if (localStorage.getItem('didOnboarding')) {
+  if (localStorage.getItem('didOnboarding') === 'true') {
     didOnboarding.set(true)
   }
   didOnboarding.subscribe(value => {
