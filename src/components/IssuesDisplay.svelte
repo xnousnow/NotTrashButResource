@@ -23,11 +23,11 @@
   {#if error}
     <CloudOff class="mx-auto h-16 w-16" />
     <p>결과를 불러오는 데 실패했어요.<br />나중에 다시 시도해 보세요.</p>
-    {:else if response.issues.noMatch || !response.result}
+  {:else if response.issues.noMatch || !response.result}
     <Description class="mx-auto h-16 w-16" />
     <p>
       <span class="rounded bg-white/20 px-1 py-0.5">{response.identified}</span>이(가) 인식되었지만<br
-    />정확한 정보를 찾지 못했어요.
+      />정확한 정보를 찾지 못했어요.
     </p>
   {:else if Object.keys(response.issues).length === 0}
     <BrokenImage class="mx-auto h-16 w-16" />

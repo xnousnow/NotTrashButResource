@@ -71,7 +71,7 @@
     <div class="relative">
       {#if generating}
         <ResultSkeletonLoader />
-      {:else if error || response.issues && Object.values(response.issues).some(value => value)}
+      {:else if error || (response.issues && Object.values(response.issues).some((value) => value))}
         <IssuesDisplay {response} {error} regenerate={generate} />
       {:else}
         <ResultDisplay {response} regenerate={generate} />
