@@ -13,7 +13,7 @@ async function identifyObjects(image: string, guidebookNames: string[]): Promise
     model: openai(env.IMAGE_IDENTIFICATION_MODEL ?? 'gpt-4o'),
     messages: getIdentificationPrompt(guidebookNames, image)
   })
-  return result.text
+  return result.text.trim().replace(/\n+/g, '\n')
 }
 
 async function fetchGuidebookData(
@@ -28,12 +28,13 @@ async function fetchGuidebookData(
 
 async function generateGuide(
   isApartment: boolean,
-  identificationResult: string,
+  imageDescription: string,
+  objects: Record<string, string[]>,
   guide: { name: string; guide: string; tips?: string }[]
 ): Promise<{ textStream: ReadableStream<string> }> {
   return streamText({
-    model: openai(env.GUIDE_GENERATION_MODEL ?? 'gpt-4o'),
-    messages: getFinalPrompt(isApartment, identificationResult, guide)
+    model: openai(env.GUIDE_GENERATION_MODEL ?? 'gpt-4o-mini'),
+    messages: getFinalPrompt(isApartment, imageDescription, objects, guide)
   })
 }
 
@@ -104,19 +105,55 @@ async function handleRequest(request: Request): Promise<Response> {
             })
           )
         } else {
-          const objects = identificationResult.split('\n')[1].split(', ')
-          const categories = identificationResult
+          const imageDescription = identificationResult.split('\n')[0]
+          const objectPairs: Record<string, string[]> = identificationResult
             .split('\n')
             .slice(2)
-            .map((line) => {
-              const parts = line.split(': ')
-              return parts.length > 1 ? parts[1].split(', ') : []
-            })
+            .reduce(
+              (acc, line) => {
+                const parts = line.split(': ')
+                const object = parts[0].slice(2)
+                const category = parts.length > 1 ? parts[1].split(', ') : []
+                acc[object] = category
+                return acc
+              },
+              {} as Record<string, string[]>
+            )
+
+          const objects = Object.keys(objectPairs)
+          const categories = Object.values(objectPairs)
 
           controller.enqueue(JSON.stringify(objects))
 
+          const objectsWithoutCategories = objects.filter((object) => !objectPairs[object].length)
+          const objectsWithErrors = new Set<string>()
+
+          if (objectsWithoutCategories.length) {
+            objectsWithoutCategories.forEach((object) => {
+              controller.enqueue(
+                JSON.stringify({ name: object, error: true, errors: { noMatch: true } })
+              )
+              objectsWithErrors.add(object)
+            })
+          }
+
           const guide = await fetchGuidebookData(categories.flat())
-          const result = await generateGuide(isApartment, identificationResult, guide)
+          const objectPairsWithCategories = Object.keys(objectPairs).reduce(
+            (acc, object) => {
+              if (objectPairs[object].length && !objectsWithErrors.has(object)) {
+                acc[object] = objectPairs[object]
+              }
+              return acc
+            },
+            {} as Record<string, string[]>
+          )
+
+          const result = await generateGuide(
+            isApartment,
+            imageDescription,
+            objectPairsWithCategories,
+            guide
+          )
 
           await processStream(result, controller)
         }
