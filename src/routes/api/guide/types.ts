@@ -4,6 +4,7 @@ export interface ObjectGuide {
   name: string
   guide: string[]
   tips?: string[]
+  reference: string
 }
 
 export interface ObjectError {
