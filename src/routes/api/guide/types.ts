@@ -24,6 +24,7 @@ export interface FullError {
     processing?: true
     other?: true
   }
+  debug?: string
 }
 
 export type IdentificationResult = string
