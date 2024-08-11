@@ -8,13 +8,17 @@
   import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
-  import { resizeImage, useAPI } from './processImage'
+  import { resizeImage, useAPI } from '$lib/useAPI'
 
   let response: any
   let generating = true
   let error = false
 
   let resized: string
+
+  let objects = []
+  let guides = []
+  let erroredObjects = []
 
   const generate = async () => {
     if (!$image) await goto('/')
@@ -24,12 +28,31 @@
 
     try {
       if (!resized) resized = await resizeImage($image!, 512, 512)
-      response = await useAPI(resized, $isApartment)
-
-      if (response.message) {
-        response = null
-        error = true
-      }
+      useAPI(
+        resized,
+        $isApartment,
+        (data: string[]) => {
+          objects = data
+          console.log(data)
+        },
+        (data: object) => {
+          guides.push(data)
+          console.log(data)
+        },
+        (data: object) => {
+          // @ts-expect-error ermwhatthesigma
+          erroredObjects.push(data.name)
+          console.log(data)
+        },
+        (err: object) => {
+          error = true
+          console.log(err)
+        },
+        () => {
+          generating = false
+          console.log('done')
+        }
+      )
     } catch {
       error = true
     } finally {

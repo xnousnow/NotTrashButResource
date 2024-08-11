@@ -4,11 +4,15 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createClient } from '@supabase/supabase-js'
 import { generateText, streamText } from 'ai'
 import type { RequestHandler } from './$types'
+import type { IdentificationResult, ObjectPairs, APIResponse, GuidebookData } from './types'
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
 
-async function identifyObjects(image: string, guidebookNames: string[]): Promise<string> {
+async function identifyObjects(
+  image: string,
+  guidebookNames: string[]
+): Promise<IdentificationResult> {
   const result = await generateText({
     model: openai(env.IMAGE_IDENTIFICATION_MODEL ?? 'gpt-4o'),
     messages: getIdentificationPrompt(guidebookNames, image)
@@ -16,9 +20,7 @@ async function identifyObjects(image: string, guidebookNames: string[]): Promise
   return result.text.trim().replace(/\n+/g, '\n')
 }
 
-async function fetchGuidebookData(
-  categories: string[]
-): Promise<{ name: string; guide: string; tips?: string }[]> {
+async function fetchGuidebookData(categories: string[]): Promise<GuidebookData[]> {
   const { data: retrievedGuides } = await supabase
     .from('guidebook')
     .select('*')
@@ -29,9 +31,9 @@ async function fetchGuidebookData(
 async function generateGuide(
   isApartment: boolean,
   imageDescription: string,
-  objects: Record<string, string[]>,
-  guide: { name: string; guide: string; tips?: string }[]
-): Promise<{ textStream: ReadableStream<string> }> {
+  objects: ObjectPairs,
+  guide: GuidebookData[]
+): Promise<APIResponse> {
   return streamText({
     model: openai(env.GUIDE_GENERATION_MODEL ?? 'gpt-4o-mini'),
     messages: getFinalPrompt(isApartment, imageDescription, objects, guide)
@@ -39,7 +41,7 @@ async function generateGuide(
 }
 
 async function processStream(
-  result: { textStream: ReadableStream<string> },
+  result: APIResponse,
   controller: ReadableStreamDefaultController<string>
 ) {
   const reader = result.textStream.getReader()
@@ -106,19 +108,16 @@ async function handleRequest(request: Request): Promise<Response> {
           )
         } else {
           const imageDescription = identificationResult.split('\n')[0]
-          const objectPairs: Record<string, string[]> = identificationResult
+          const objectPairs: ObjectPairs = identificationResult
             .split('\n')
             .slice(2)
-            .reduce(
-              (acc, line) => {
-                const parts = line.split(': ')
-                const object = parts[0].slice(2)
-                const category = parts.length > 1 ? parts[1].split(', ') : []
-                acc[object] = category
-                return acc
-              },
-              {} as Record<string, string[]>
-            )
+            .reduce((acc, line) => {
+              const parts = line.split(': ')
+              const object = parts[0].slice(2)
+              const category = parts.length > 1 ? parts[1].split(', ') : []
+              acc[object] = category
+              return acc
+            }, {} as ObjectPairs)
 
           const objects = Object.keys(objectPairs)
           const categories = Object.values(objectPairs)
@@ -138,14 +137,14 @@ async function handleRequest(request: Request): Promise<Response> {
           }
 
           const guide = await fetchGuidebookData(categories.flat())
-          const objectPairsWithCategories = Object.keys(objectPairs).reduce(
+          const objectPairsWithCategories: ObjectPairs = Object.keys(objectPairs).reduce(
             (acc, object) => {
               if (objectPairs[object].length && !objectsWithErrors.has(object)) {
                 acc[object] = objectPairs[object]
               }
               return acc
             },
-            {} as Record<string, string[]>
+            {} as ObjectPairs
           )
 
           const result = await generateGuide(

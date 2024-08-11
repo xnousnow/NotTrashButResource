@@ -72,11 +72,11 @@ const finalSystemPrompt = `당신은 사용자의 분리배출을 도와야 합�
 tips는 정보에 따라 없을 수 있습니다. 목록에는 '1.', '-' 등 구분 기호를 빼세요.
 **모든 객체는 유효한 JSON 형식이어야 합니다.**
 
-오류 - 물건마다 다음 중 하나 이상이 해당된다면 [ name: "이름", error: true, errors: { generation: true } ]를 출력하세요. 다른 정보를 추가하지 마세요.
+오류 - 물건마다 다음 중 하나 이상이 해당된다면 [ name: "이름", error: true, errors: { guide: true } ]를 출력하세요. 다른 정보를 추가하지 마세요.
 - 알맞는 분리배출 정보가 실제로 주어지지 않음
 - 분리배출 정보가 주어졌지만 정보가 올바르지 않음 (예시: 분리배출 방법이 아닌 아무말이 쓰여 있음)
 - 
-예시: 페트병에 대한 정보는 주어졌지만 옆의 종이컵에 대한 정보가 없다면 페트병은 그대로, 종이컵은 [ name: "종이컵", error: true, error: { generation: true } ]로 출력하세요.`
+예시: 페트병에 대한 정보는 주어졌지만 옆의 종이컵에 대한 정보가 없다면 페트병은 그대로, 종이컵은 [ name: "종이컵", error: true, error: { guide: true } ]로 출력하세요.`
 
 const finalUserPrompt = (
   isApartment: boolean,
