@@ -127,6 +127,11 @@ async function handleRequest(request: Request): Promise<Response> {
           const objectsWithoutCategories = objects.filter((object) => !objectPairs[object].length)
           const objectsWithErrors = new Set<string>()
 
+          if (objectsWithoutCategories.length === objects.length) {
+            controller.enqueue(JSON.stringify({ error: true, errors: { noMatches: true } }))
+            return controller.close()
+          }
+
           if (objectsWithoutCategories.length) {
             objectsWithoutCategories.forEach((object) => {
               controller.enqueue(
