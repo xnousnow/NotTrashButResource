@@ -1,4 +1,9 @@
-import type { IdentifiedObjects, FullError } from '../routes/api/guide/types'
+import type {
+  IdentifiedObjects,
+  FullError,
+  ObjectError,
+  ObjectGuide
+} from '../routes/api/guide/types'
 
 export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
   new Promise<string>((resolve, reject) => {
@@ -34,8 +39,8 @@ export const useAPI = async (
   image: string,
   isApartment: boolean,
   setObjects: (objects: IdentifiedObjects) => void,
-  addGuide: (guide: { name: string; guide: string[]; tips?: string[] }) => void,
-  addError: (error: { name: string; error: boolean; errors: { noMatch?: boolean } }) => void,
+  addGuide: (guide: ObjectGuide) => void,
+  addError: (error: ObjectError) => void,
   fullError: (error: FullError) => void,
   close: () => void
 ) => {
@@ -53,41 +58,72 @@ export const useAPI = async (
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
 
-    let done: boolean | undefined
-    let value: Uint8Array | undefined
-    ;({ done, value } = await reader.read())
-    if (done) {
-      fullError({ error: true, errors: { other: true } })
-      return
-    } else {
-      const currentObject = JSON.parse(decoder.decode(value))
+    let buffer = ''
 
-      if (currentObject.error) {
-        fullError(currentObject)
+    const processBuffer = (buffer: string) => {
+      let depth = 0
+      let startIndex = 0
+      let inString = false
+
+      for (let i = 0; i < buffer.length; i++) {
+        const char = buffer[i]
+
+        if (char === '"' && buffer[i - 1] !== '\\') {
+          inString = !inString
+        }
+
+        if (!inString) {
+          if (char === '{' || char === '[') {
+            if (depth === 0) startIndex = i
+            depth++
+          } else if (char === '}' || char === ']') {
+            depth--
+            if (depth === 0) {
+              const jsonString = buffer.slice(startIndex, i + 1)
+              try {
+                const parsedObject = JSON.parse(jsonString)
+                processObject(parsedObject)
+              } catch (e) {
+                console.error('Error parsing JSON:', jsonString, e)
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const processObject = (obj: IdentifiedObjects | ObjectGuide | ObjectError | FullError) => {
+      if ('noObject' in obj) {
+        console.warn('Received noObject response', obj)
         return
       }
 
-      if (Array.isArray(currentObject)) {
-        setObjects(currentObject)
+      if (Array.isArray(obj)) {
+        setObjects(obj)
+      } else if ('error' in obj && 'name' in obj) {
+        addError(obj)
+      } else if ('error' in obj) {
+        fullError(obj)
+      } else if ('name' in obj) {
+        addGuide(obj)
       }
     }
 
     while (true) {
-      ;({ done, value } = await reader.read())
+      const { done, value } = await reader.read()
       if (done) break
 
-      const currentObject = JSON.parse(decoder.decode(value))
+      buffer += decoder.decode(value, { stream: true })
+      processBuffer(buffer)
+      buffer = ''
+    }
 
-      if (currentObject.name && !currentObject.error) {
-        addGuide(currentObject)
-      } else if (currentObject.name && currentObject.error) {
-        addError(currentObject)
-      } else if (currentObject.error) {
-        fullError(currentObject)
-        return
-      }
+    // Handle any leftover buffer
+    if (buffer.length > 0) {
+      processBuffer(buffer)
     }
   } catch (error: unknown) {
+    console.error(error)
     fullError({ error: true, errors: { processing: true }, debug: JSON.stringify(error) })
   } finally {
     close()

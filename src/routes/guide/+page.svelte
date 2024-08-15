@@ -1,61 +1,72 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { blur } from 'svelte/transition'
+  import { blur, fly } from 'svelte/transition'
   import { goto } from '$app/navigation'
   import { image, isApartment } from '$lib/stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
-  import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
   import { resizeImage, useAPI } from '$lib/useAPI'
+  import type {
+    FullError,
+    IdentifiedObjects,
+    ObjectError,
+    ObjectGuide,
+    EachObject
+  } from '../api/guide/types'
 
-  let response: any
-  let generating = true
-  let error = false
-
+  $: generating = true
   let resized: string
 
-  let objects = []
-  let guides = []
-  let erroredObjects = []
+  let objects: string[] = []
+  let guides: EachObject[] = []
+  let error: FullError = { error: false }
 
-  const generate = async () => {
+  let shownObjects = 0
+
+  const generate = async function () {
     if (!$image) await goto('/')
 
     generating = true
-    error = false
+    error = { error: false }
+    objects = []
+    guides = []
+    shownObjects = 0
 
     try {
       if (!resized) resized = await resizeImage($image!, 512, 512)
       useAPI(
         resized,
         $isApartment,
-        (data: string[]) => {
+        function (data: IdentifiedObjects) {
           objects = data
-          console.log(data)
+
+          for (let i = 0; i < objects.length; i++) {
+            setTimeout(() => {
+              shownObjects++
+            }, i * 100)
+          }
         },
-        (data: object) => {
+        function (data: ObjectGuide) {
           guides.push(data)
-          console.log(data)
+          error = { error: false }
         },
-        (data: object) => {
-          // @ts-expect-error ermwhatthesigma
-          erroredObjects.push(data.name)
-          console.log(data)
+        function (data: ObjectError) {
+          guides.push(data)
+          if (guides.every((g) => 'error' in g)) {
+            error = { error: true, errors: { noMatches: true } }
+          }
         },
-        (err: object) => {
-          error = true
-          console.log(err)
+        function (data: FullError) {
+          error = data
         },
-        () => {
+        function () {
           generating = false
-          console.log('done')
         }
       )
     } catch {
-      error = true
-    } finally {
+      error = { error: true }
       generating = false
     }
   }
@@ -65,46 +76,66 @@
   })
 </script>
 
-<div class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2" transition:blur>
-  <a href="/">
-    <ArrowBack class="h-6 w-6" />
-  </a>
-  {#if $image}
-    <div class="relative overflow-hidden rounded-3xl">
+<div class="absolute left-0 top-0 h-full w-full" transition:blur={{ duration: 300 }}>
+  {#if generating}
+    <div
+      class="absolute left-0 top-0 flex h-full w-full overflow-hidden"
+      transition:fly={{ y: 30, duration: 300 }}
+    >
       <img
-        src={URL.createObjectURL($image)}
+        src={resized}
         alt="Captured"
-        class="h-full max-h-[30vh] w-full object-cover duration-300"
-        class:generating
+        class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
       />
-      {#if generating}
+      {#if objects.length}
+        <ul
+          class="absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center text-3xl font-bold opacity-50"
+          transition:blur={{ duration: 300 }}
+        >
+          {#each objects as object, i}
+            <li
+              class="duration-500 ease-out"
+              class:translate-y-5={shownObjects <= i}
+              class:opacity-0={shownObjects < i}
+            >
+              {object}
+            </li>
+          {/each}
+        </ul>
+      {:else if generating}
         <div
           class="absolute left-0 top-0 flex h-full w-full items-center justify-center opacity-50"
-          out:blur={{ duration: 300 }}
+          out:fly={{ y: 30, duration: 300 }}
         >
           <AutoAwesome class="h-16 w-16 animate-pulse" />
         </div>
       {/if}
     </div>
-  {/if}
-  <div
-    class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
-    class:overflow-y-scroll={!generating}
-  >
-    <div class="relative">
-      {#if generating}
-        <ResultSkeletonLoader />
-      {:else if error || (response.issues && Object.values(response.issues).some((value) => value))}
-        <IssuesDisplay {response} {error} regenerate={generate} />
-      {:else}
-        <ResultDisplay {response} regenerate={generate} />
+  {:else}
+    <div
+      class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2"
+      transition:blur={{ duration: 300 }}
+    >
+      <a href="/">
+        <ArrowBack class="h-6 w-6" />
+      </a>
+      {#if $image}
+        <div class="relative overflow-hidden rounded-3xl">
+          <img src={resized} alt="Captured" class="h-full max-h-[30vh] w-full object-cover" />
+        </div>
       {/if}
+      <div
+        class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
+        class:overflow-y-scroll={!generating}
+      >
+        <div class="relative">
+          {#if error.error || guides.every((g) => 'error' in g)}
+            <IssuesDisplay {error} {objects} regenerate={generate} />
+          {:else}
+            <ResultDisplay {guides} regenerate={generate} />
+          {/if}
+        </div>
+      </div>
     </div>
-  </div>
+  {/if}
 </div>
-
-<style lang="postcss">
-  .generating {
-    @apply scale-110 animate-pulse opacity-70 blur;
-  }
-</style>

@@ -24,7 +24,10 @@
   let imageFile: File
 </script>
 
-<div class="absolute left-0 top-0 flex h-full w-full flex-col p-2" transition:blur>
+<div
+  class="absolute left-0 top-0 flex h-full w-full flex-col p-2"
+  transition:blur={{ duration: 300 }}
+>
   <div class="relative w-full grow overflow-hidden rounded-3xl">
     <button class="absolute left-3 top-3 z-50">
       <Info class="h-6 w-6" />

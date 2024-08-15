@@ -10,7 +10,7 @@ export interface ObjectGuide {
 export interface ObjectError {
   name: string
   error: true
-  errors: {
+  errors?: {
     guide: true
   }
 }
@@ -18,10 +18,11 @@ export interface ObjectError {
 export type EachObject = ObjectGuide | ObjectError
 
 export interface FullError {
-  error: true
-  errors: {
+  error: boolean
+  errors?: {
     noObject?: true
     processing?: true
+    noMatches?: true
     other?: true
   }
   debug?: string

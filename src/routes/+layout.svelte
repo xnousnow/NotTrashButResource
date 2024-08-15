@@ -2,7 +2,7 @@
   import '../app.css'
 </script>
 
-<div class="relative w-full">
+<div class="relative h-full w-full overflow-hidden">
   <slot />
 </div>
 
