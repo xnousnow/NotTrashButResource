@@ -133,7 +133,6 @@
         alt="Captured"
         class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
       />
-      <button on:click={startEffect} class="absolute left-0 top-0 z-50">re</button>
       <canvas bind:this={imageEffect} class="absolute left-0 top-0 h-full w-full opacity-30" />
       {#if objects.length}
         <ul
