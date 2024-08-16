@@ -16,14 +16,55 @@
     EachObject
   } from '../api/guide/types'
 
-  $: generating = true
+  let generating = true
   let resized: string
 
   let objects: string[] = []
   let guides: EachObject[] = []
   let error: FullError = { error: false }
 
+  let imageEffect: HTMLCanvasElement
+  let particles: { x: number; y: number; delay: number }[] = []
+  let animationId: number
   let shownObjects = 0
+
+  const resizeCanvas = () => {
+    imageEffect.width = window.innerWidth
+    imageEffect.height = window.innerHeight
+    initParticles()
+  }
+
+  const initParticles = () => {
+    const particleCount = Math.floor(20000 / (window.devicePixelRatio || 1))
+    particles = Array.from({ length: particleCount }, () => ({
+      x: Math.random() * imageEffect.width,
+      y: Math.random() * imageEffect.height,
+      delay: Math.random() * 2
+    }))
+  }
+
+  const startEffect = () => {
+    resizeCanvas()
+    const ctx = imageEffect.getContext('2d')!
+
+    const drawParticles = () => {
+      ctx.clearRect(0, 0, imageEffect.width, imageEffect.height)
+      particles.forEach(({ x, y, delay }) => {
+        const time = Date.now() / 1000 + delay
+        const opacity = (Math.sin(time * Math.PI) + 1) / 2
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`
+        ctx.fillRect(x, y, 1, 1)
+      })
+      requestAnimationFrame(drawParticles)
+    }
+    drawParticles()
+  }
+
+  const stopEffect = () => {
+    if (animationId) {
+      cancelAnimationFrame(animationId)
+    }
+  }
 
   const generate = async function () {
     if (!$image) await goto('/')
@@ -33,6 +74,8 @@
     objects = []
     guides = []
     shownObjects = 0
+
+    setTimeout(() => startEffect(), 0)
 
     try {
       if (!resized) resized = await resizeImage($image!, 512, 512)
@@ -72,10 +115,13 @@
   }
 
   onMount(async () => {
+    startEffect()
     await generate()
+    stopEffect()
   })
 </script>
 
+<svelte:window on:resize={resizeCanvas} />
 <div class="absolute left-0 top-0 h-full w-full" transition:blur={{ duration: 300 }}>
   {#if generating}
     <div
@@ -87,6 +133,8 @@
         alt="Captured"
         class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
       />
+      <button on:click={startEffect} class="absolute left-0 top-0 z-50">re</button>
+      <canvas bind:this={imageEffect} class="absolute left-0 top-0 h-full w-full opacity-30" />
       {#if objects.length}
         <ul
           class="absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center text-3xl font-bold opacity-50"
