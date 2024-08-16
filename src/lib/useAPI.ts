@@ -1,8 +1,8 @@
 import type {
   IdentifiedObjects,
-  FullError,
+  ObjectGuide,
   ObjectError,
-  ObjectGuide
+  FullError
 } from '../routes/api/guide/types'
 
 export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
@@ -59,71 +59,51 @@ export const useAPI = async (
     const decoder = new TextDecoder()
 
     let buffer = ''
-
-    const processBuffer = (buffer: string) => {
-      let depth = 0
-      let startIndex = 0
-      let inString = false
-
-      for (let i = 0; i < buffer.length; i++) {
-        const char = buffer[i]
-
-        if (char === '"' && buffer[i - 1] !== '\\') {
-          inString = !inString
-        }
-
-        if (!inString) {
-          if (char === '{' || char === '[') {
-            if (depth === 0) startIndex = i
-            depth++
-          } else if (char === '}' || char === ']') {
-            depth--
-            if (depth === 0) {
-              const jsonString = buffer.slice(startIndex, i + 1)
-              try {
-                const parsedObject = JSON.parse(jsonString)
-                processObject(parsedObject)
-              } catch (e) {
-                console.error('Error parsing JSON:', jsonString, e)
-              }
-            }
-          }
-        }
-      }
-    }
-
-    const processObject = (obj: IdentifiedObjects | ObjectGuide | ObjectError | FullError) => {
-      if ('noObject' in obj) {
-        console.warn('Received noObject response', obj)
-        return
-      }
-
-      if (Array.isArray(obj)) {
-        setObjects(obj)
-      } else if ('error' in obj && 'name' in obj) {
-        addError(obj)
-      } else if ('error' in obj) {
-        fullError(obj)
-      } else if ('name' in obj) {
-        addGuide(obj)
-      }
-    }
+    const pattern = /(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\])/g
 
     while (true) {
       const { done, value } = await reader.read()
-      if (done) break
+      if (done) {
+        break
+      }
 
       buffer += decoder.decode(value, { stream: true })
-      processBuffer(buffer)
-      buffer = ''
+
+      let match
+      while ((match = pattern.exec(buffer)) !== null) {
+        const jsonString = match[0]
+
+        try {
+          const currentObject = JSON.parse(jsonString)
+
+          if (Array.isArray(currentObject)) {
+            setObjects(currentObject)
+          } else if (currentObject.name && !currentObject.error) {
+            addGuide(currentObject)
+          } else if (currentObject.name && currentObject.error) {
+            addError(currentObject)
+          } else if (currentObject.error && typeof currentObject.error === 'boolean') {
+            fullError(currentObject)
+          }
+        } catch (error) {
+          console.error('Error parsing JSON:', error)
+          console.error('Invalid jsonString:', jsonString)
+        }
+      }
+
+      // Remove processed part from buffer
+      const lastMatch = buffer.lastIndexOf('}')
+      if (lastMatch !== -1) {
+        buffer = buffer.slice(lastMatch + 1)
+      }
+      pattern.lastIndex = 0 // Reset regex index
     }
 
-    // Handle any leftover buffer
-    if (buffer.length > 0) {
-      processBuffer(buffer)
+    // Process any remaining data in the buffer
+    if (buffer.trim()) {
+      console.warn('Unprocessed data in buffer:', buffer)
     }
   } catch (error: unknown) {
-    console.error(error)
     fullError({ error: true, errors: { processing: true }, debug: JSON.stringify(error) })
   } finally {
     close()
