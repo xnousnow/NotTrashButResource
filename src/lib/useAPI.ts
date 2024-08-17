@@ -69,7 +69,7 @@ export const useAPI = async (
 
       buffer += decoder.decode(value, { stream: true })
 
-      let match
+      let match: RegExpExecArray | null
       while ((match = pattern.exec(buffer)) !== null) {
         const jsonString = match[0]
 
