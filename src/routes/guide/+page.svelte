@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { blur, fly } from 'svelte/transition'
+  import { backOut } from 'svelte/easing'
   import { goto } from '$app/navigation'
   import { image, isApartment } from '$lib/stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
@@ -26,7 +27,6 @@
   let imageEffect: HTMLCanvasElement
   let particles: { x: number; y: number; delay: number }[] = []
   let animationId: number
-  let shownObjects = 0
 
   const resizeCanvas = () => {
     imageEffect.width = window.innerWidth
@@ -73,7 +73,6 @@
     error = { error: false }
     objects = []
     guides = []
-    shownObjects = 0
 
     setTimeout(() => startEffect(), 0)
 
@@ -84,12 +83,6 @@
         $isApartment,
         function (data: IdentifiedObjects) {
           objects = data
-
-          for (let i = 0; i < objects.length; i++) {
-            setTimeout(() => {
-              shownObjects++
-            }, i * 100)
-          }
         },
         function (data: ObjectGuide) {
           guides.push(data)
@@ -141,9 +134,8 @@
         >
           {#each objects as object, i}
             <li
-              class="duration-500 ease-out"
-              class:translate-y-5={shownObjects <= i}
-              class:opacity-0={shownObjects < i}
+              class="animate-pulse duration-500 ease-out"
+              in:fly|global={{ y: 30, duration: 500, delay: i * 75, easing: backOut }}
             >
               {object}
             </li>
@@ -152,7 +144,7 @@
       {:else if generating}
         <div
           class="absolute left-0 top-0 flex h-full w-full items-center justify-center opacity-50"
-          out:fly={{ y: 30, duration: 300 }}
+          out:fly={{ y: -30, duration: 300 }}
         >
           <AutoAwesome class="h-16 w-16 animate-pulse" />
         </div>
