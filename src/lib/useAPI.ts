@@ -60,7 +60,7 @@ export const useAPI = async (
 
     let didSetObjects = false
     let buffer = ''
-    const pattern = /(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\])/g
+    const pattern = /^(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\[[^[\]]*(?:\[[^[\]]*\][^[\]]*)*\])/g
 
     while (true) {
       const { done, value } = await reader.read()
