@@ -58,6 +58,7 @@ export const useAPI = async (
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
 
+    let didSetObjects = false
     let buffer = ''
     const pattern = /(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\])/g
 
@@ -76,8 +77,9 @@ export const useAPI = async (
         try {
           const currentObject = JSON.parse(jsonString)
 
-          if (Array.isArray(currentObject)) {
+          if (Array.isArray(currentObject) && !didSetObjects) {
             setObjects(currentObject)
+            didSetObjects = true
           } else if (currentObject.name && !currentObject.error) {
             addGuide(currentObject)
           } else if (currentObject.name && currentObject.error) {
