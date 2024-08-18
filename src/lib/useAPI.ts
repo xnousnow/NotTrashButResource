@@ -71,8 +71,10 @@ export const useAPI = async (
       buffer += decoder.decode(value, { stream: true })
 
       let match: RegExpExecArray | null
+      let lastMatchIndex = 0
       while ((match = pattern.exec(buffer)) !== null) {
         const jsonString = match[0]
+        lastMatchIndex = pattern.lastIndex
 
         try {
           const currentObject = JSON.parse(jsonString)
@@ -93,15 +95,10 @@ export const useAPI = async (
         }
       }
 
-      // Remove processed part from buffer
-      const lastMatch = buffer.lastIndexOf('}')
-      if (lastMatch !== -1) {
-        buffer = buffer.slice(lastMatch + 1)
-      }
-      pattern.lastIndex = 0 // Reset regex index
+      buffer = buffer.slice(lastMatchIndex)
+      pattern.lastIndex = 0
     }
 
-    // Process any remaining data in the buffer
     if (buffer.trim()) {
       console.warn('Unprocessed data in buffer:', buffer)
     }
