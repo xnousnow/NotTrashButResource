@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 html {
-  @apply bg-black text-white overflow-hidden;
+  @apply overflow-hidden bg-black text-white;
 }

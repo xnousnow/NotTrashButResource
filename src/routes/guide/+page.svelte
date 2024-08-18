@@ -1,87 +1,180 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { blur } from 'svelte/transition'
+  import { blur, fly } from 'svelte/transition'
+  import { backOut } from 'svelte/easing'
   import { goto } from '$app/navigation'
   import { image, isApartment } from '$lib/stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
-  import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
-  import { resizeImage, useAPI } from './processImage'
+  import { resizeImage, useAPI } from '$lib/useAPI'
+  import type {
+    FullError,
+    IdentifiedObjects,
+    ObjectError,
+    ObjectGuide,
+    EachObject
+  } from '../api/guide/types'
 
-  let response: any
   let generating = true
-  let error = false
-
   let resized: string
 
-  const generate = async () => {
+  let objects: string[] = []
+  let guides: EachObject[] = []
+  let error: FullError = { error: false }
+
+  let imageEffect: HTMLCanvasElement
+  let particles: { x: number; y: number; delay: number }[] = []
+  let animationId: number
+
+  const resizeCanvas = () => {
+    imageEffect.width = window.innerWidth
+    imageEffect.height = window.innerHeight
+    initParticles()
+  }
+
+  const initParticles = () => {
+    const particleCount = Math.floor(20000 / (window.devicePixelRatio || 1))
+    particles = Array.from({ length: particleCount }, () => ({
+      x: Math.random() * imageEffect.width,
+      y: Math.random() * imageEffect.height,
+      delay: Math.random() * 2
+    }))
+  }
+
+  const startEffect = () => {
+    resizeCanvas()
+    const ctx = imageEffect.getContext('2d')!
+
+    const drawParticles = () => {
+      ctx.clearRect(0, 0, imageEffect.width, imageEffect.height)
+      particles.forEach(({ x, y, delay }) => {
+        const time = Date.now() / 1000 + delay
+        const opacity = (Math.sin(time * Math.PI) + 1) / 2
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`
+        ctx.fillRect(x, y, 1, 1)
+      })
+      requestAnimationFrame(drawParticles)
+    }
+    drawParticles()
+  }
+
+  const stopEffect = () => {
+    if (animationId) {
+      cancelAnimationFrame(animationId)
+    }
+  }
+
+  const generate = async function () {
     if (!$image) await goto('/')
 
     generating = true
-    error = false
+    error = { error: false }
+    objects = []
+    guides = []
+
+    setTimeout(() => startEffect(), 0)
 
     try {
       if (!resized) resized = await resizeImage($image!, 512, 512)
-      response = await useAPI(resized, $isApartment)
-
-      if (response.message) {
-        response = null
-        error = true
-      }
+      useAPI(
+        resized,
+        $isApartment,
+        function (data: IdentifiedObjects) {
+          objects = data
+        },
+        function (data: ObjectGuide) {
+          guides.push(data)
+          error = { error: false }
+        },
+        function (data: ObjectError) {
+          guides.push(data)
+          if (guides.every((g) => 'error' in g)) {
+            error = { error: true, errors: { noMatches: true } }
+          }
+        },
+        function (data: FullError) {
+          error = data
+        },
+        function () {
+          generating = false
+        }
+      )
     } catch {
-      error = true
-    } finally {
+      error = { error: true }
       generating = false
     }
   }
 
   onMount(async () => {
+    startEffect()
     await generate()
+    stopEffect()
   })
 </script>
 
-<div class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2" transition:blur>
-  <a href="/">
-    <ArrowBack class="h-6 w-6" />
-  </a>
-  {#if $image}
-    <div class="relative overflow-hidden rounded-3xl">
+<svelte:window on:resize={resizeCanvas} />
+<div class="absolute left-0 top-0 h-full w-full" transition:blur={{ duration: 300 }}>
+  {#if generating}
+    <div
+      class="absolute left-0 top-0 flex h-full w-full overflow-hidden"
+      transition:fly={{ y: 30, duration: 300 }}
+    >
       <img
-        src={URL.createObjectURL($image)}
+        src={resized}
         alt="Captured"
-        class="h-full max-h-[30vh] w-full object-cover duration-300"
-        class:generating
+        class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
       />
-      {#if generating}
+      <canvas bind:this={imageEffect} class="absolute left-0 top-0 h-full w-full opacity-30" />
+      {#if objects.length}
+        <ul
+          class="absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center text-3xl font-bold opacity-50"
+          transition:blur={{ duration: 300 }}
+        >
+          {#each objects as object, i}
+            <li
+              class="animate-pulse duration-500 ease-out"
+              in:fly|global={{ y: 30, duration: 500, delay: i * 75, easing: backOut }}
+            >
+              {object}
+            </li>
+          {/each}
+        </ul>
+      {:else if generating}
         <div
           class="absolute left-0 top-0 flex h-full w-full items-center justify-center opacity-50"
-          out:blur={{ duration: 300 }}
+          out:fly={{ y: -30, duration: 300 }}
         >
           <AutoAwesome class="h-16 w-16 animate-pulse" />
         </div>
       {/if}
     </div>
-  {/if}
-  <div
-    class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
-    class:overflow-y-scroll={!generating}
-  >
-    <div class="relative">
-      {#if generating}
-        <ResultSkeletonLoader />
-      {:else if error || response.issues && Object.values(response.issues).some(value => value)}
-        <IssuesDisplay {response} {error} regenerate={generate} />
-      {:else}
-        <ResultDisplay {response} regenerate={generate} />
+  {:else}
+    <div
+      class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2"
+      transition:blur={{ duration: 300 }}
+    >
+      <a href="/">
+        <ArrowBack class="h-6 w-6" />
+      </a>
+      {#if $image}
+        <div class="relative overflow-hidden rounded-3xl">
+          <img src={resized} alt="Captured" class="h-full max-h-[30vh] w-full object-cover" />
+        </div>
       {/if}
+      <div
+        class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
+        class:overflow-y-scroll={!generating}
+      >
+        <div class="relative">
+          {#if error.error || guides.every((g) => 'error' in g)}
+            <IssuesDisplay {error} {objects} regenerate={generate} />
+          {:else}
+            <ResultDisplay {guides} regenerate={generate} />
+          {/if}
+        </div>
+      </div>
     </div>
-  </div>
+  {/if}
 </div>
-
-<style lang="postcss">
-  .generating {
-    @apply scale-110 animate-pulse opacity-70 blur;
-  }
-</style>
