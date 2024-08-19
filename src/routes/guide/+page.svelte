@@ -8,9 +8,8 @@
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
-  import Refresh from '~icons/material-symbols/Refresh'
   import { resizeImage, useAPI } from '$lib/useAPI'
-  import SmallButton from '$components/SmallButton.svelte'
+
   import type {
     FullError,
     IdentifiedObjects,

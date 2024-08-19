@@ -1,7 +1,9 @@
 <script lang="ts">
-  export let Icon: any
+  import type { IconifyIcon } from 'iconify'
+
+  export let Icon: typeof IconifyIcon
   export let text: string | undefined = undefined
-  export let action: any
+  export let action: () => void
 </script>
 
 <button

@@ -25,8 +25,13 @@
     canvas.height = video.videoHeight
     const ctx = canvas.getContext('2d')
     ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
-    canvas.toBlob((blob: any) => {
-      imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+    canvas.toBlob((blob) => {
+      if (blob) {
+        imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+      } else {
+        console.error('Failed to capture image from video.')
+        return
+      }
       image.set(imageFile)
 
       goto('/guide')
