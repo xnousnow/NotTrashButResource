@@ -8,7 +8,9 @@
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
+  import Refresh from '~icons/material-symbols/Refresh'
   import { resizeImage, useAPI } from '$lib/useAPI'
+  import SmallButton from '$components/SmallButton.svelte'
   import type {
     FullError,
     IdentifiedObjects,
@@ -152,7 +154,7 @@
     </div>
   {:else}
     <div
-      class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2"
+      class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2 pb-0"
       transition:blur={{ duration: 300 }}
     >
       <a href="/">

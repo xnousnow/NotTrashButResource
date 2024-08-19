@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { blur } from 'svelte/transition'
+  import { blur, fly } from 'svelte/transition'
+  import { backOut } from 'svelte/easing'
   import Refresh from '~icons/material-symbols/Refresh'
   import Description from '~icons/material-symbols/Description'
   import SmallButton from '$components/SmallButton.svelte'
@@ -43,7 +44,10 @@
       </div>
     {/if}
   {/each}
-  <div class="mx-auto">
+  <div
+    class="sticky -bottom-2 left-2 flex w-screen -translate-x-2 justify-center pb-10 pt-3 backdrop-blur"
+    in:fly|global={{ y: 30, duration: 500, easing: backOut, delay: 300 }}
+  >
     <SmallButton Icon={Refresh} text="다른 답변 받기" action={regenerate} />
   </div>
 </div>
