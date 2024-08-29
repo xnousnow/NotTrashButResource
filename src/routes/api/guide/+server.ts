@@ -5,7 +5,7 @@ import { generateObject } from 'ai'
 import { createClient } from '@supabase/supabase-js'
 import type { RequestHandler } from './$types'
 import { identificationMessages, guideMessages } from '$lib/prompts'
-import type { IdentifiedObject, ResultObject } from './types'
+import type { IdentifiedObject } from './types'
 import {
   supportedIdentificationResponseSchema,
   supportedSingleGuideResponseSchema
@@ -67,7 +67,6 @@ export const POST: RequestHandler = async ({ request }) => {
                 category
               })) ?? []
           )
-        console.log(JSON.stringify(retrievedGuides))
 
         const generatedGuides = await generateObject({
           model: openai('gpt-4o-mini'),
