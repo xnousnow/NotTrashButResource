@@ -1,115 +1,149 @@
 import type { CoreMessage } from 'ai'
+import dedent from 'dedent'
+import type { RetrievedGuide, identifiedObject } from '../routes/api/guide/types'
 
-const CATEGORIES_PROMPT = '# 분리배출 카테고리\n'
-const APARTMENT_LABEL = '아파트'
-const HOUSE_LABEL = '주택'
+export const identificationMessages = (image: string, categories: string[]): CoreMessage[] => {
+  return [
+    {
+      role: 'system',
+      content: dedent`
+      사용자가 분리배출하려는 물건이 있는 이미지가 주어질 것입니다. 사용자가 물건을 올바르게 분리배출할 수 있도록 이미지의 각 물건을 정확히 인식하고 다음 목록에 따라 분류하세요.
 
-const identificationPrompt = (guidebookNames: string[]) => `# 지시
-당신은 사용자의 분리배출을 도와주는 분리배출 전문가입니다. 당신의 임무는 사용자가 입력한 사진의 물건 및 재질을 알아보는 것입니다.
+      카테고리: ${categories.join(', ')}
 
-사용자의 이미지가 주어질 것입니다. 입력된 사진은 사용자가 분리배출을 원하는 물건입니다.
-사용자의 분리배출을 돕기 위해 물건을 분리배출하기 위해 참고해야 할 항목을 찾으세요.
+      지시:
+      1. 이미지에서 사용자가 분리배출하려는 것으로 보이는 모든 물건을 인식하세요.
+      2. 인식된 각 물건마다 가장 적절한 분리배출 카테고리를 선택하세요. 예를 들어, 찌그러진 페트병은 페트병, 과자 봉지는 비닐로 분류할 수 있습니다. 정확한 카테고리가 없어도, 가장 적절한 분리배출 방법을 가지고 있을 카테고리를 선택하세요. LED 또는 형광등과 같이 겉모습으로만 판단하기 힘들다면 가능한 여러 가지를 선택하세요.
+      3. 만약 아무 카테고리에도 속하지 않거나 다른 문제가 있다면, 답변에서 알맞은 오류를 선택하세요.
+      4. 다음 형식으로 답변하세요:
+        { "description": "물건들의 특징을 자세히 설명하세요. 예시: 라벨이 없는 찌그러진 투명 페트병", "result": [ 물건 형식 ] }
 
-첫 번째 줄에는 이미지를 간단히 설명하세요. 물건의 상태와 재질 등에 집중하고, 설명만 들어도 이미지를 상상할 수 있도록 자세히 쓰세요.
-두 번째 줄에는 이미지의 나타난 물건을 나열하세요. 쉼표로 구분하세요.
-세 번째 줄에는 두 번째 줄에서 나열한 물건마다 알맞는 분리배출 카테고리를 선택하세요. 무조건 물건마다 한 항목이 있어야 합니다.
-- 물건 이름: 물건에 알맞는 분리배출 카테고리
+        물건 형식:
+          { "name": "물건의 이름", "category": ["알맞는 카테고리(들)"] }
+        또는 알맞는 카테고리가 없거나 다른 문제가 있다면:
+          { "name": "물건의 이름", "error": true, "errors": { "noMatch": 물건에 알맞는 카테고리가 없음, "other": 기타 오류 (boolean) }
 
-만약 알맞는 분리배출 카테고리가 없거나 물건이 확실하지 않다면 카테고리를 적지 마세요.
-알맞는 분리배출 카테고리가 여러 개일 수도 있습니다. 예를 들어 LED/형광등과 같이 종류를 알 수 없는 전등은 두 개를 모두 선택하세요.
-대한민국에서 주로 사용되는 이름을 사용하세요. 예를 들어 천 가방 대신 에코백이라고 쓰세요.
+        만약 이미지에 오류가 있어 물건을 인식할 수 없다면 이 형식으로만 답변하세요:
+          { "error": true, "errors" { "noObjects": 이미지에 물건이 없음 (boolean), "notReal": 이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음, "other": 기타 이미지 오류 (boolean) } }
 
-만약 이미지에 물건이 없다면 위를 따르지 말고 '물건 없음', 기타 오류가 있다면 '오류'**만** 출력하세요.
-기능 및 재질이 같은 물건은 하나로 취급하세요. 예를 들어 흰 수세미, 초록 수세미가 있더라도 '수세미' 하나만 쓰세요.
-보통 같이 쓰이는 물건은 하나로 취급하세요. 예를 들어 페트병을 '페트병, 페트병 뚜껑, 라벨' 등으로 분리하지 마세요.
+      **한국어로 답변하세요. 위 JSON 객체 외 다른 설명을 포함하지 마세요. 답변은 유효한 JSON 객체 하나만을 포함해야 합니다.**
+    `
+    },
+    { role: 'user', content: [{ type: 'image', image }] }
+  ]
+}
 
-지시되지 않은 빈 줄, 설명, 코드 블록 등을 삽입하지 **마세요.**
-
-**분리배출에서는 재질이 중요합니다. 재질이 같은 것을 우선 선택하세요.**
-
-# 예시 답변
-분홍색 머리띠 및 찌그러진 투명 페트병
-머리띠, 투명 페트병
-- 머리띠
-- 투명 페트병: 투명 페트병
-
-오류
-
-천장에 달린 전등
-전등
-- 전등: LED 조명등, 형광등
-
-라벨과 뚜껑이 없는 투명 페트병
-투명 페트병
-- 투명 페트병: 투명 페트병
-
-인형, 레고, 나무 블록 등 여러 장난감
-인형, 레고, 나무 블록, 플라스틱 장난감
-- 인형: 인형/천/솜
-- 레고: 레고
-- 플라스틱 장난감: 플라스틱 장난감
-- 나무 블록
-
-물건 없음
-
-${CATEGORIES_PROMPT}${guidebookNames.join(', ')}`
-
-export const getIdentificationPrompt = (guidebookNames: string[], image: string): CoreMessage[] => [
-  { role: 'system', content: identificationPrompt(guidebookNames) },
-  { role: 'user', content: [{ type: 'image', image }] }
-]
-
-const finalSystemPrompt = `당신은 사용자의 분리배출을 도와야 합니다.
-이미지 설명을 보고 분리배출 방법에서 사용자의 주거 환경에 맞지 않거나 관련없는 단계를 제거하세요. 나머지 부분은 최대한 보존하세요.
-이미지 설명에 물건이 있더라도 목록에 없다면 무시하세요.
-
-예시 - 사용자가 아파트에 있다면 아파트에 관한 내용만 제공하세요.
-
-말투 - '일반쓰레기로 배출해요.'와 같이 친근하고 명확한 말투를 사용하세요. 해요, 예요, 아요 등을 사용하세요.
-
-답변 형식 - 물건마다 다음 JSON 객체를 엔터로 구분해 반복하세요:
-{ "name": "이름", "guide": ["단계별 방법"], "tips": ["분리배출 팁"], "reference": "사용된 분리배출 정보의 이름" }
-이름에는 재질이 아닌 사진 인식 결과의 이름을 적으세요. 예를 들어 '인형/천/솜'이 아닌 '곰 인형'을 적으세요.
-tips는 정보에 따라 없을 수 있습니다. 목록에는 '1.', '-' 등 구분 기호를 빼세요.
-reference는 사용된 분리배출 정보의 이름, 예를 들어 '플라스틱 장난감'을 적으세요.
-**모든 객체는 유효한 JSON 형식이어야 합니다.**
-
-오류 - 물건마다 다음 중 하나 이상이 해당된다면 [ name: "이름", error: true, errors: { guide: true } ]를 출력하세요. 다른 정보를 추가하지 마세요.
-- 알맞는 분리배출 정보가 실제로 주어지지 않음
-- 분리배출 정보가 주어졌지만 정보가 올바르지 않음 (예시: 분리배출 방법이 아닌 아무말이 쓰여 있음)
--
-예시: 페트병에 대한 정보는 주어졌지만 옆의 종이컵에 대한 정보가 없다면 페트병은 그대로, 종이컵은 [ name: "종이컵", error: true, error: { guide: true } ]로 출력하세요.`
-
-const finalUserPrompt = (
-  isApartment: boolean,
-  imageDescription: string,
-  objectPairs: Record<string, string[]>,
-  infos: { name: string; guide: string; tips?: string }[]
-) => `주거 환경 - ${isApartment ? APARTMENT_LABEL : HOUSE_LABEL}
-
-이미지 설명:
-${imageDescription} (아래에 없는 물건 이름은 무시하세요)
-${Object.keys(objectPairs)
-  .map((object) => `- ${object}: ${objectPairs[object].join(', ')}`)
-  .join('\n')}
-
-${infos
-  .map(
-    ({ name, guide, tips }) =>
-      `[ name: "${name}", guide: [${guide
-        .split('\n')
-        .map((line) => `"${line.trim()}"`)
-        .join(', ')}]${tips ? `, tips: "${tips.replace(/\n/g, ' ')}"` : ''} ]`
-  )
-  .join('\n')}
-`
-
-export const getFinalPrompt = (
-  isApartment: boolean,
-  imageDescription: string,
-  objectPairs: Record<string, string[]>,
-  infos: { name: string; guide: string; tips?: string }[]
+export const guideMessages = (
+  description: string,
+  objects: identifiedObject[],
+  guides: RetrievedGuide[],
+  isApartment: boolean
 ): CoreMessage[] => [
-  { role: 'system', content: finalSystemPrompt },
-  { role: 'user', content: finalUserPrompt(isApartment, imageDescription, objectPairs, infos) }
+  {
+    role: 'system',
+    content: dedent`
+      사용자가 분리배출하려는 물건 및 분리배출 방법이 주어질 것입니다. 사용자가 물건을 올바르게 분리배출할 수 있도록, 이미지 설명을 보고 분리배출 방법에서 사용자의 주거 환경에 맞지 않거나 관련없는 단계를 제거하세요. 나머지 부분은 최대한 보존하세요.
+
+      변경할 사항:
+      - 주거 환경과 관련 없는 정보 제거 (예시: 아파트와 주택에 따라 분리배출 방법이 다르고 주택이라면 아파트와 관련된 정보를 제거)
+      - 물건과 관련 없는 정보 제거 (예시: 아이폰 및 안드로이드에 따라 분리배출 방법이 다르고 아이폰이라면 안드로이드와 관련된 정보를 제거)
+      - 이미 되어있는 단계 제거 (예시: 라벨을 떼는 단계가 있어도 라벨이 없는 페트병이라면 라벨을 떼는 단계를 제거)
+
+      "일반쓰레기로 배출해요."와 같이 친근하고 명확한 말투를 사용하세요. 해요, 예요, 아요 등을 사용하세요.
+
+      다음 형식으로 답변하세요:
+      [ { "name": "물건의 이름", "guide": ["분리배출 방법"], "tips" (선택 사항): [분리배출 팁"], "reference": ["사용한 분리배출 정보의 이름"] } 또는 { "name": "물건의 이름", "error": true", "errors": { "notEnough": 정보가 주어졌지만 충분하지 않음 (boolean), "noGuide": 물건이 인식되었지만 분리배출 방법이 없음 (boolean), "other": 기타 오류 (boolean) } } ]
+
+      **한국어로 답변하세요. 위 JSON 객체 외 다른 설명을 포함하지 마세요. 답변은 유효한 JSON 객체 하나만을 포함해야 합니다.**
+    `
+  },
+  {
+    role: 'user',
+    content: dedent`
+      이미지 설명: 라벨이 없는 빈 보라색 페트병 및 천장에 달린 전구
+      인식된 물건:
+      - 페트병: 페트병
+      - 전구: LED 등, 형광등
+      주거 환경: 주택
+
+      # 페트병
+      1. 내용물을 비우고 깨끗이 세척해요.
+      2. 라벨을 제거해요.
+      3. 페트병을 최대한 압축해요.
+      4. 뚜껑을 닫아 투명 페트로 배출해요. 유색 페트병은 일반 플라스틱으로 배출해요.
+
+      - 페트병을 최대한 압축시켜 배출하면 운송/압축/보관 과정에 도움이 돼요.
+      - 뚜껑은 파쇄하여 세척하는 과정에서 물에 떠서 투명페트와 분리되기 때문에 따로 모아 재활용 가능하므로 닫아서 버려요.
+
+      # LED 등
+      1. 전구형과 직관형 LED 등만 형광등 분리배출함에 함께 배출해요.
+      2. 그 외 LED 등은 모두 생활폐기물(불연성쓰레기)로 배출해요.
+
+      - 정부는 2023년부터 LED 등도 생산자책임재활용(EPR) 제도에 포함시켰어요.
+      - LED용 분리배출함을 따로 마련하지 않고 형광등 분리배출함에 버리도록 하고 있어요.
+      - 천장 조명으로 많이 쓰이는 편판형이나 십자형, 원반형은 EPR에 포함되지 않아 일반쓰레기로 배출해요.
+      - 생활폐기물은 불연재봉투(일명 마대자루)를 구매하여 담아요.
+
+      # 형광등
+      1. 행정복지센터나 아파트 단지 내 형광등 수거함에 배출해요.
+
+      - 형광등에는 가스 형태의 수은이 들어있어 깨지면 가스를 접할 위험성이 있으니 절대 깨서 버리면 안돼요.
+    `
+  },
+  {
+    role: 'assistant',
+    content: dedent`
+      [
+        { "name": "페트병", "guide": ["페트병을 최대한 압축해요.", "뚜껑을 닫아 일반 플라스틱으로 배출해요."], "tips": ["페트병을 최대한 압축시켜 배출하면 운송/압축/보관 과정에 도움이 돼요.", "뚜껑은 파쇄하여 세척하는 과정에서 물에 떠서 투명페트와 분리되기 때문에 따로 모아 재활용 가능하므로 닫아서 버려요."], "reference": ["페트병"] },
+        { "name": "전구", "guide": ["LED 등이어도 형광등 분리배출함에 배출해요."], "tips": ["정부는 2023년부터 LED 등도 생산자책임재활용(EPR) 제도에 포함시켰어요.", "LED용 분리배출함을 따로 마련하지 않고 형광등 분리배출함에 버리도록 하고 있어요.", "형광등에는 가스 형태의 수은이 들어있어 깨지면 가스를 접할 위험성이 있으니 절대 깨서 버리면 안돼요."], "reference": ["LED 등", "형광등"] }
+      ]
+    `
+  },
+  {
+    role: 'user',
+    content: dedent`
+      이미지 설명: 이미지에는 작은 인형과 장난감들이 보입니다.
+      인식된 물건:
+      - 인형: 인형/천/솜
+      - 장난감: 플라스틱 장난감
+      주거 환경: 아파트
+
+      # 인형/천/솜
+      1. 일반쓰레기로 배출해요.
+
+      - 인형, 천, 솜 등은 재활용이 불가한 섬유 재질이에요.
+      - 만약 종량제 봉투에 담기 힘들만큼 크다면 가위로 자르거나 대형생활폐기물로 신고해 배출해요.
+
+      # 플라스틱 장난감
+      1. 일반쓰레기로 배출해요.
+    `
+  },
+  {
+    role: 'assistant',
+    content: dedent`
+      [
+        { "name": "인형", "guide": ["일반쓰레기로 배출해요."], "tips": ["인형, 천, 솜 등은 재활용이 불가한 섬유 재질이에요.", "만약 종량제 봉투에 담기 힘들만큼 크다면 가위로 자르거나 대형생활폐기물로 신고해 배출해요."], "reference": ["인형/천/솜"] },
+        { "name": "플라스틱 장난감", "guide": ["일반쓰레기로 배출해요."], "reference": ["플라스틱 장난감"] }
+      ]
+    `
+  },
+  {
+    role: 'user',
+    content: dedent`
+      이미지 설명: ${description}
+      인식된 물건:
+      ${objects.map((object) => `- ${object.name}: ${object.category.length ? object.category.join(', ') : '카테고리 없음'}`).join('\n')}
+      주거 환경: ${isApartment ? '아파트' : '주택'}
+
+      ${guides
+        .map(
+          (guide) => dedent`
+            # ${guide.name}
+            ${guide.guide.map((step, index) => `${index + 1}. ${step}`).join('\n')}
+            ${'tips' in guide ? `\n${guide.tips?.map((tip) => `- ${tip}`).join('\n')}` : ''}
+          `
+        )
+        .join('\n\n')}
+    `
+  }
 ]
