@@ -5,16 +5,25 @@ export interface RetrievedGuide {
 }
 
 // 인식 결과 항목
-export interface IdentifiedObject {
+
+export interface IdentifiedObjectBase {
   name: string
+}
+
+export interface MatchedIdentifiedObject extends IdentifiedObjectBase {
   category: string[]
-  error?: boolean
-  errors?: {
-    noMatch?: boolean
+}
+
+export interface UnmatchedIdentifiedObject extends IdentifiedObjectBase {
+  error: true
+  errors: {
+    noMatch: true
     notReal?: boolean
     other?: boolean
   }
 }
+
+export type IdentifiedObject = MatchedIdentifiedObject | UnmatchedIdentifiedObject
 
 // 인식 결과
 export interface IdentificationResult {
@@ -23,8 +32,6 @@ export interface IdentificationResult {
 }
 
 // 처음 인식된 물건들
-export type IdentifiedObjects = string[]
-
 export interface ResponseBase {
   type: 'objects' | 'guide' | 'error'
 }
@@ -52,7 +59,7 @@ export type ResultObject = ObjectGuide | ObjectError
 // 첫 물건 응답
 export interface ObjectResponse extends ResponseBase {
   type: 'objects'
-  objects: IdentifiedObjects
+  objects: string[]
 }
 
 // 가이드 응답

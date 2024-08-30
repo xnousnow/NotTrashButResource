@@ -1,33 +1,33 @@
 import type { CoreMessage } from 'ai'
 import dedent from 'dedent'
-import type { RetrievedGuide, identifiedObject } from '../routes/api/guide/types'
+import type { RetrievedGuide, MatchedIdentifiedObject } from '../routes/api/guide/types'
 
 export const identificationMessages = (image: string, categories: string[]): CoreMessage[] => {
   return [
     {
       role: 'system',
       content: dedent`
-      사용자가 분리배출하려는 물건이 있는 이미지가 주어질 것입니다. 사용자가 물건을 올바르게 분리배출할 수 있도록 이미지의 각 물건을 정확히 인식하고 다음 목록에 따라 분류하세요.
-
-      카테고리: ${categories.join(', ')}
-
-      지시:
-      1. 이미지에서 사용자가 분리배출하려는 것으로 보이는 모든 물건을 인식하세요.
-      2. 인식된 각 물건마다 가장 적절한 분리배출 카테고리를 선택하세요. 예를 들어, 찌그러진 페트병은 페트병, 과자 봉지는 비닐로 분류할 수 있습니다. 정확한 카테고리가 없어도, 가장 적절한 분리배출 방법을 가지고 있을 카테고리를 선택하세요. LED 또는 형광등과 같이 겉모습으로만 판단하기 힘들다면 가능한 여러 가지를 선택하세요.
-      3. 만약 아무 카테고리에도 속하지 않거나 다른 문제가 있다면, 답변에서 알맞은 오류를 선택하세요.
-      4. 다음 형식으로 답변하세요:
-        { "description": "물건들의 특징을 자세히 설명하세요. 예시: 라벨이 없는 찌그러진 투명 페트병", "result": [ 물건 형식 ] }
-
-        물건 형식:
-          { "name": "물건의 이름", "category": ["알맞는 카테고리(들)"] }
-        또는 알맞는 카테고리가 없거나 다른 문제가 있다면:
-          { "name": "물건의 이름", "error": true, "errors": { "noMatch": 물건에 알맞는 카테고리가 없음, "other": 기타 오류 (boolean) }
-
-        만약 이미지에 오류가 있어 물건을 인식할 수 없다면 이 형식으로만 답변하세요:
-          { "error": true, "errors" { "noObjects": 이미지에 물건이 없음 (boolean), "notReal": 이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음, "other": 기타 이미지 오류 (boolean) } }
-
-      **한국어로 답변하세요. 위 JSON 객체 외 다른 설명을 포함하지 마세요. 답변은 유효한 JSON 객체 하나만을 포함해야 합니다.**
-    `
+        사용자가 분리배출하려는 물건이 있는 이미지가 주어질 것입니다. 사용자가 물건을 올바르게 분리배출할 수 있도록 이미지의 각 물건을 정확히 인식하고 다음 목록에 따라 분류하세요.
+  
+        카테고리: ${categories.join(', ')}
+  
+        지시:
+        1. 이미지에서 사용자가 분리배출하려는 것으로 보이는 모든 물건을 인식하세요.
+        2. 인식된 각 물건마다 가장 적절한 분리배출 카테고리를 선택하세요. 예를 들어, 찌그러진 페트병은 페트병, 과자 봉지는 비닐로 분류할 수 있습니다. 정확한 카테고리가 없어도, 가장 적절한 분리배출 방법을 가지고 있을 카테고리를 선택하세요. LED 또는 형광등과 같이 겉모습으로만 판단하기 힘들다면 가능한 여러 가지를 선택하세요.
+        3. 만약 아무 카테고리에도 속하지 않거나 다른 문제가 있다면, 답변에서 알맞은 오류를 선택하세요.
+        4. 다음 형식으로 답변하세요:
+          { "description": "물건들의 특징을 자세히 설명하세요. 예시: 라벨이 없는 찌그러진 투명 페트병", "result": [ 물건 형식 ] }
+  
+          물건 형식:
+            { "name": "물건의 이름", "category": ["알맞는 카테고리(들)"] }
+          또는 알맞는 카테고리가 없거나 다른 문제가 있다면:
+            { "name": "물건의 이름", "error": true, "errors": { "noMatch": 물건에 알맞는 카테고리가 없음, "other": 기타 오류 (boolean) }
+  
+          만약 이미지에 오류가 있어 물건을 인식할 수 없다면 이 형식으로만 답변하세요:
+            { "error": true, "errors" { "noObjects": 이미지에 물건이 없음 (boolean), "notReal": 이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음, "other": 기타 이미지 오류 (boolean) } }
+  
+        **한국어로 답변하세요. 위 JSON 객체 외 다른 설명을 포함하지 마세요. 답변은 유효한 JSON 객체 하나만을 포함해야 합니다.**
+      `
     },
     { role: 'user', content: [{ type: 'image', image }] }
   ]
@@ -35,7 +35,7 @@ export const identificationMessages = (image: string, categories: string[]): Cor
 
 export const guideMessages = (
   description: string,
-  objects: identifiedObject[],
+  objects: MatchedIdentifiedObject[],
   guides: RetrievedGuide[],
   isApartment: boolean
 ): CoreMessage[] => [
