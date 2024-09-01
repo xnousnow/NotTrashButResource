@@ -4,9 +4,9 @@
   import Refresh from '~icons/material-symbols/Refresh'
   import Description from '~icons/material-symbols/Description'
   import SmallButton from '$components/SmallButton.svelte'
-  import type { EachObject } from '../routes/api/guide/types'
+  import type { ResultObject } from '../routes/api/guide/types'
 
-  export let guides: EachObject[]
+  export let guides: ResultObject[]
   export let regenerate: () => void
 </script>
 
