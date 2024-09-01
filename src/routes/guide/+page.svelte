@@ -7,7 +7,7 @@
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import ResultDisplay from '$components/ResultDisplay.svelte'
-  import IssuesDisplay from '$components/IssuesDisplay.svelte'
+  import ErrorDisplay from '$components/ErrorDisplay.svelte'
   import { useAPI } from '$lib/useAPI'
   import type {
     ObjectResponseData,
@@ -167,7 +167,7 @@
       >
         <div class="relative">
           {#if error.error}
-            <IssuesDisplay {error} usePlural={objects.length > 1} regenerate={generate} />
+            <ErrorDisplay {error} usePlural={objects.length > 1} regenerate={generate} />
           {:else}
             <ResultDisplay {guides} regenerate={generate} />
           {/if}
