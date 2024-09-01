@@ -3,7 +3,9 @@ import { z } from 'zod'
 export const identificationResponseSchema = z.object({
   description: z
     .string()
-    .describe('물건들의 특징을 자세히 설명하세요. 예시: 라벨이 없는 찌그러진 투명 페트병'),
+    .describe(
+      '물건들의 특징을 자세히 설명하세요. 물건의 재질, 모양 등을 포함하세요. 예시: "페트병"이 아닌 "물이 조금 남은 찌그러진 투명 페트병"'
+    ),
   result: z.union([
     z.array(
       z.union([
