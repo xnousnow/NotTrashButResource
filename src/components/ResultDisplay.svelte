@@ -4,6 +4,7 @@
   import Refresh from '~icons/material-symbols/Refresh'
   import Description from '~icons/material-symbols/Description'
   import SmallButton from '$components/SmallButton.svelte'
+  import ImportContacts from '~icons/material-symbols/ImportContacts'
   import type { ResultObject } from '../routes/api/guide/types'
 
   export let guides: ResultObject[]
@@ -13,7 +14,13 @@
 <div class="absolute left-0 top-0 flex w-full flex-col gap-2" transition:blur={{ duration: 300 }}>
   {#each guides as guide}
     {#if 'guide' in guide}
-      <h1 class="my-1 pl-1 text-4xl font-bold">{guide.name}</h1>
+      <div class="">
+        <h1 class="my-1 pl-1 text-4xl font-bold">{guide.name}</h1>
+        <span class="my-1 ml-1 flex items-center gap-1 text-base font-medium text-white/50">
+          <ImportContacts class="h-6 w-6" />
+          {guide.reference.join(', ')}
+        </span>
+      </div>
       <ul class="space-y-2">
         {#each guide.guide as step, i}
           <li class="flex gap-2">
