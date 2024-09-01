@@ -1,11 +1,10 @@
 import type {
-  IdentifiedObjects,
-  ObjectGuide,
-  ObjectError,
-  FullError
+  ObjectResponseData,
+  GuideResponseData,
+  ErrorResponseData
 } from '../routes/api/guide/types'
 
-export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
+const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
   new Promise<string>((resolve, reject) => {
     if (!(file instanceof Blob))
       return reject(new TypeError('The provided value is not a Blob or File.'))
@@ -36,75 +35,49 @@ export const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
   })
 
 export const useAPI = async (
-  image: string,
+  image: File,
   isApartment: boolean,
-  setObjects: (objects: IdentifiedObjects) => void,
-  addGuide: (guide: ObjectGuide) => void,
-  addError: (error: ObjectError) => void,
-  fullError: (error: FullError) => void,
+  handleObjects: (objects: ObjectResponseData) => void,
+  handleGuides: (guides: GuideResponseData) => void,
+  handleError: (error: ErrorResponseData) => void,
   close: () => void
 ) => {
-  try {
-    const response = await fetch('/api/guide', {
-      method: 'POST',
-      body: JSON.stringify({ image, isApartment }),
-      headers: { 'Content-Type': 'application/json' }
-    })
+  const processedImage = await resizeImage(image, 512, 512)
 
-    if (!response.body) {
-      throw new Error('No response body')
+  const response = await fetch('/api/guide', {
+    method: 'POST',
+    body: JSON.stringify({ image: processedImage, isApartment }),
+    headers: { 'Content-Type': 'application/json' }
+  })
+
+  const reader = response.body?.getReader()
+  if (!reader) {
+    handleError({ error: true, errors: { other: true } })
+    return
+  }
+
+  const decoder = new TextDecoder()
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) {
+      close()
+      break
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
+    const text = decoder.decode(value)
+    const { type, data } = JSON.parse(text)
 
-    let didSetObjects = false
-    let buffer = ''
-    const pattern = /^(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\[[^[\]]*(?:\[[^[\]]*\][^[\]]*)*\])/g
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) {
+    switch (type) {
+      case 'objects':
+        handleObjects(data)
         break
-      }
-
-      buffer += decoder.decode(value, { stream: true })
-
-      let match: RegExpExecArray | null
-      let lastMatchIndex = 0
-      while ((match = pattern.exec(buffer)) !== null) {
-        const jsonString = match[0]
-        lastMatchIndex = pattern.lastIndex
-
-        try {
-          const currentObject = JSON.parse(jsonString)
-
-          if (Array.isArray(currentObject) && !didSetObjects) {
-            setObjects(currentObject)
-            didSetObjects = true
-          } else if (currentObject.name && !currentObject.error) {
-            addGuide(currentObject)
-          } else if (currentObject.name && currentObject.error) {
-            addError(currentObject)
-          } else if (currentObject.error && typeof currentObject.error === 'boolean') {
-            fullError(currentObject)
-          }
-        } catch (error) {
-          console.error('Error parsing JSON:', error)
-          console.error('Invalid jsonString:', jsonString)
-        }
-      }
-
-      buffer = buffer.slice(lastMatchIndex)
-      pattern.lastIndex = 0
+      case 'guide':
+        handleGuides(data)
+        break
+      case 'error':
+        handleError(data)
+        break
     }
-
-    if (buffer.trim()) {
-      console.warn('Unprocessed data in buffer:', buffer)
-    }
-  } catch (error: unknown) {
-    fullError({ error: true, errors: { processing: true }, debug: JSON.stringify(error) })
-  } finally {
-    close()
   }
 }
