@@ -31,17 +31,12 @@ export interface IdentificationResult {
   result: IdentifiedObject[]
 }
 
-// 처음 인식된 물건들
-export interface ResponseBase {
-  type: 'objects' | 'guide' | 'error'
-}
-
 // 생성된 물건 분리배출 방법
 export interface ObjectGuide {
   name: string
   guide: string[]
   tips?: string[]
-  reference: string
+  reference: string[]
 }
 
 // 생성된 물건 오류
@@ -50,31 +45,52 @@ export interface ObjectError {
   error: true
   errors: {
     noMatch?: boolean
+    noGuide?: boolean
     other?: boolean
   }
 }
 
 export type ResultObject = ObjectGuide | ObjectError
 
+// 처음 인식된 물건들
+export type ResponseTypes = 'objects' | 'guide' | 'error'
+export interface ResponseBase {
+  type: ResponseTypes
+}
+
 // 첫 물건 응답
-export interface ObjectResponse extends ResponseBase {
-  type: 'objects'
+export interface ObjectResponseData {
   objects: string[]
 }
 
-// 가이드 응답
-export interface GuideResponse extends ResponseBase {
-  type: 'guide'
-  guides: ResultObject[]
+export interface ObjectResponse extends ResponseBase {
+  type: 'objects'
+  data: ObjectResponseData
 }
 
-// 전체 오류
-export interface ErrorResponse extends ResponseBase {
-  type: 'error'
+// 가이드 응답
+export interface GuideResponseData {
+  guide: ResultObject[]
+}
+
+export interface GuideResponse extends ResponseBase {
+  type: 'guide'
+  data: GuideResponseData
+}
+
+// 전체 오류 응답
+export interface ErrorResponseData {
+  error: true
   errors: {
     noObjects?: boolean
     other?: boolean
   }
 }
 
+export interface ErrorResponse extends ResponseBase {
+  type: 'error'
+  data: ErrorResponseData
+}
+
 export type Response = ObjectResponse | GuideResponse | ErrorResponse
+export type ResponseData = ObjectResponseData | GuideResponseData | ErrorResponseData

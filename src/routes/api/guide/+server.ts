@@ -1,29 +1,34 @@
 import { env } from '$env/dynamic/private'
-import { createAnthropic } from '@ai-sdk/anthropic'
+// import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 import { createClient } from '@supabase/supabase-js'
 import type { RequestHandler } from './$types'
 import { identificationMessages, guideMessages } from '$lib/prompts'
-import type { MatchedIdentifiedObject, RetrievedGuide } from './types'
-import {
-  supportedIdentificationResponseSchema,
-  supportedSingleGuideResponseSchema
-} from '$lib/schemas'
+import type {
+  ErrorResponseData,
+  GuideResponseData,
+  MatchedIdentifiedObject,
+  ObjectResponseData,
+  ResponseTypes,
+  RetrievedGuide
+} from './types'
+import { identificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 
-const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
+// const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
 
 const identifyObjects = async (image: string, categories: string[]) =>
   generateObject({
-    model: anthropic('claude-3-5-sonnet-20240620', { cacheControl: true }),
-    schema: supportedIdentificationResponseSchema,
+    model: openai('gpt-4o-2024-08-06'),
+    schema: identificationResponseSchema,
     messages: identificationMessages(image, categories)
   }).then((result) => result.object)
 
-const fetchGuides = async (queries: string[]) =>
-  supabase
+const fetchGuides = async (queries: string[]) => {
+  console.log(`• Searching for: ${queries.join(', ')}`)
+  return supabase
     .from('guidebook')
     .select('*')
     .in('name', queries)
@@ -36,6 +41,7 @@ const fetchGuides = async (queries: string[]) =>
           category
         })) ?? []
     )
+}
 
 const generateGuide = async (
   description: string,
@@ -46,7 +52,7 @@ const generateGuide = async (
   generateObject({
     model: openai('gpt-4o-mini'),
     output: 'array',
-    schema: supportedSingleGuideResponseSchema,
+    schema: singleGuideResponseSchema,
     messages: guideMessages(
       description ?? '',
       identifiedObjects as MatchedIdentifiedObject[],
@@ -54,6 +60,14 @@ const generateGuide = async (
       isApartment
     )
   }).then((result) => result.object)
+
+const sendData = (
+  controller: ReadableStreamDefaultController,
+  type: ResponseTypes,
+  data: ObjectResponseData | GuideResponseData | ErrorResponseData
+) => {
+  controller.enqueue(JSON.stringify({ type, data }))
+}
 
 export const POST: RequestHandler = async ({ request }) => {
   const { image, isApartment } = await request.json()
@@ -68,43 +82,56 @@ export const POST: RequestHandler = async ({ request }) => {
       try {
         const identificationResult = await identifyObjects(image, categories)
 
+        if ('error' in identificationResult.result) {
+          sendData(controller, 'error', {
+            error: true,
+            errors: identificationResult.result.errors ?? { other: true }
+          })
+          controller.close()
+          return
+        }
+
+        // identified objects that has categories (length > 0 or not null)
         const identifiedObjectsWithCategories = identificationResult.result?.filter(
           (obj: object): obj is { name: string; category: string[] } =>
             'category' in obj && obj.category !== null
         )
 
-        if ('error' in identificationResult) {
-          controller.enqueue(JSON.stringify({ ...identificationResult, type: 'error' }))
+        if (identifiedObjectsWithCategories?.length === 0) {
+          sendData(controller, 'error', { error: true, errors: { noObjects: true } })
           controller.close()
           return
         } else if ('result' in identificationResult) {
           const identifiedObjects = identificationResult.result!.map(({ name }) => name)
-          controller.enqueue(JSON.stringify(identifiedObjects))
-        } else if (identifiedObjectsWithCategories?.length === 0) {
-          controller.enqueue(
-            JSON.stringify({ type: 'error', error: true, errors: { noObjects: true } })
-          )
-          controller.close()
-          return
+          sendData(controller, 'objects', { objects: identifiedObjects })
         } else {
-          throw new Error('결과가 올바른 형식이 아닙니다.')
+          throw new Error('Unexpected Error Occurred')
         }
 
         const retrievedGuides = await fetchGuides(
-          identifiedObjectsWithCategories?.map(({ name }) => name) ?? []
+          identifiedObjectsWithCategories.map(({ category }) => category).flat()
         )
 
+        console.log(JSON.stringify(identifiedObjectsWithCategories))
+        console.log(JSON.stringify(retrievedGuides))
+
         const generatedGuides = await generateGuide(
-          identificationResult.description!,
-          identifiedObjectsWithCategories!,
+          identificationResult.description,
+          identifiedObjectsWithCategories,
           retrievedGuides,
           isApartment
         )
 
-        controller.enqueue(JSON.stringify(generatedGuides))
+        if (generatedGuides.length === 0) {
+          sendData(controller, 'error', { error: true, errors: { other: true } })
+        } else if (generatedGuides.every((guide) => 'error' in guide && guide.error)) {
+          sendData(controller, 'error', { error: true, errors: { other: true } })
+        } else {
+          sendData(controller, 'guide', { guide: generatedGuides })
+        }
       } catch (error) {
-        controller.enqueue(JSON.stringify({ type: 'error', error: true, errors: { other: true } }))
-        console.log('오류가 발생했지만 안전하게 처리했습니다. 다음은 오류 메시지입니다:')
+        sendData(controller, 'error', { error: true, errors: { other: true } })
+        console.log('An error occurred and has been sent to the client. Here is the error:')
         console.error(error)
       } finally {
         controller.close()
