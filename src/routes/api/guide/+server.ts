@@ -102,7 +102,7 @@ export const POST: RequestHandler = async ({ request }) => {
         )
 
         if ('error' in identificationResult.result) {
-          console.log(`✧ #${index} Error generated: ${identificationResult.result.error}`)
+          console.log(`✧ #${index} Error generated`)
           sendData(controller, 'error', {
             error: true,
             errors: identificationResult.result.errors ?? { other: true }
