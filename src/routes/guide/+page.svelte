@@ -5,6 +5,7 @@
   import { image, isApartment } from '$lib/stores'
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
+  import AvgPace from '~icons/material-symbols/AvgPace'
   import ResultSkeletonLoader from '$components/ResultSkeletonLoader.svelte'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import IssuesDisplay from '$components/IssuesDisplay.svelte'
@@ -16,15 +17,22 @@
 
   let resized: string
 
+  let time = 0
+
   const generate = async () => {
     if (!$image) await goto('/')
 
     generating = true
     error = false
+    time = 0
 
     try {
+      const startTime = Date.now()
+
       if (!resized) resized = await resizeImage($image!, 512, 512)
       response = await useAPI(resized, $isApartment)
+
+      time = Date.now() - startTime
 
       if (response.message) {
         response = null
@@ -60,6 +68,14 @@
           out:blur={{ duration: 300 }}
         >
           <AutoAwesome class="h-16 w-16 animate-pulse" />
+        </div>
+      {:else}
+        <div
+          class="absolute bottom-2 right-2 flex gap-2 rounded-full bg-black/30 px-2 py-1"
+          transition:blur={{ duration: 300 }}
+        >
+          <AvgPace class="h-6 w-6" />
+          {(time / 1000).toFixed(2)}s
         </div>
       {/if}
     </div>
