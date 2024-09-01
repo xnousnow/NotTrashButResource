@@ -119,7 +119,7 @@ export const POST: RequestHandler = async ({ request }) => {
         )
 
         if (identifiedObjectsWithCategories?.length === 0) {
-          sendData(controller, 'error', { error: true, errors: { noObjects: true } })
+          sendData(controller, 'error', { error: true, errors: { noMatches: true } })
           console.log(`✧ #${index} No objects found`)
           controller.close()
           console.log(`✧ #${index} Closed controller`)

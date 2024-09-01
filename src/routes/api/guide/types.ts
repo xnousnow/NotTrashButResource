@@ -83,6 +83,7 @@ export interface ErrorResponseData {
   error: true
   errors: {
     noObjects?: boolean
+    noMatches?: boolean
     other?: boolean
   }
 }

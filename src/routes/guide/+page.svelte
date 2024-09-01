@@ -167,7 +167,7 @@
       >
         <div class="relative">
           {#if error.error}
-            <IssuesDisplay {error} regenerate={generate} />
+            <IssuesDisplay {error} usePlural={objects.length > 1} regenerate={generate} />
           {:else}
             <ResultDisplay {guides} regenerate={generate} />
           {/if}
