@@ -13,14 +13,15 @@
     ObjectResponseData,
     GuideResponseData,
     ErrorResponseData,
-    ResultObject
+    ResultObject,
+    ErrorInterface
   } from '../api/guide/types'
 
   let generating = true
 
   let objects: string[] = []
   let guides: ResultObject[] = []
-  let error: ErrorResponseData | { error: false } = { error: false }
+  let error: ErrorInterface = { error: false }
 
   let imageEffect: HTMLCanvasElement
   let particles: { x: number; y: number; delay: number }[] = []
@@ -165,8 +166,8 @@
         class:overflow-y-scroll={!generating}
       >
         <div class="relative">
-          {#if error.error || guides.every((g) => 'error' in g)}
-            <IssuesDisplay {error} {objects} regenerate={generate} />
+          {#if error.error}
+            <IssuesDisplay {error} regenerate={generate} />
           {:else}
             <ResultDisplay {guides} regenerate={generate} />
           {/if}

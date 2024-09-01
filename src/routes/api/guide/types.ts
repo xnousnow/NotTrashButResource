@@ -87,6 +87,12 @@ export interface ErrorResponseData {
   }
 }
 
+export interface NoErrorData {
+  error: false
+}
+
+export type ErrorInterface = ErrorResponseData | NoErrorData
+
 export interface ErrorResponse extends ResponseBase {
   type: 'error'
   data: ErrorResponseData
