@@ -52,7 +52,7 @@
     {/if}
   {/each}
   <div
-    class="sticky bottom-0 flex w-screen -translate-x-2 justify-center pb-10 pt-3 backdrop-blur"
+    class="sticky bottom-0 flex w-full justify-center pb-10 pt-3 backdrop-blur"
     in:fly|global={{ y: 30, duration: 500, easing: backOut, delay: 300 }}
   >
     <SmallButton Icon={Refresh} text="다른 답변 받기" action={regenerate} />
