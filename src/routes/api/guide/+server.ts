@@ -19,7 +19,7 @@ import { identificationResponseSchema, singleGuideResponseSchema } from '$lib/sc
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
 
-let requestindex = 0
+let requestIndex = 0
 
 const identifyObjects = async (image: string, categories: string[]) =>
   generateObject({
@@ -72,7 +72,7 @@ const sendData = (
 export const POST: RequestHandler = async ({ request }) => {
   const { image, isApartment } = await request.json()
 
-  const index = requestindex++
+  const index = requestIndex++
   const startTime = Date.now()
   const timings: { step: string; duration: number }[] = []
 
