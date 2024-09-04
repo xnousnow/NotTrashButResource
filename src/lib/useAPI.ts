@@ -34,6 +34,27 @@ const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
     reader.readAsDataURL(file)
   })
 
+function findJsonObjects(str: string): string[] {
+  const objects: string[] = []
+  let depth = 0
+  let startIndex = -1
+
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '{') {
+      if (depth === 0) startIndex = i
+      depth++
+    } else if (str[i] === '}') {
+      depth--
+      if (depth === 0 && startIndex !== -1) {
+        objects.push(str.substring(startIndex, i + 1))
+        startIndex = -1 // Reset startIndex
+      }
+    }
+  }
+
+  return objects
+}
+
 export const useAPI = async (
   image: File,
   isApartment: boolean,
@@ -42,42 +63,61 @@ export const useAPI = async (
   handleError: (error: ErrorResponseData) => void,
   close: () => void
 ) => {
-  const processedImage = await resizeImage(image, 512, 512)
+  try {
+    const processedImage = await resizeImage(image, 512, 512)
 
-  const response = await fetch('/api/guide', {
-    method: 'POST',
-    body: JSON.stringify({ image: processedImage, isApartment }),
-    headers: { 'Content-Type': 'application/json' }
-  })
+    const response = await fetch('/api/guide', {
+      method: 'POST',
+      body: JSON.stringify({ image: processedImage, isApartment }),
+      headers: { 'Content-Type': 'application/json' }
+    })
 
-  const reader = response.body?.getReader()
-  if (!reader) {
+    const reader = response.body?.getReader()
+    if (!reader) {
+      handleError({ error: true, errors: { other: true } })
+      return
+    }
+
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) {
+        close()
+        break
+      }
+
+      buffer += decoder.decode(value, { stream: true })
+
+      const jsonObjects = findJsonObjects(buffer)
+
+      for (const jsonString of jsonObjects) {
+        try {
+          const { type, data } = JSON.parse(jsonString)
+
+          switch (type) {
+            case 'objects':
+              handleObjects(data)
+              break
+            case 'guide':
+              handleGuides(data)
+              break
+            case 'error':
+              handleError(data)
+              break
+          }
+
+          // Remove the processed object from the buffer
+          const endIndex = buffer.indexOf(jsonString) + jsonString.length
+          buffer = buffer.slice(endIndex)
+        } catch (error) {
+          console.error('Error parsing JSON:', error)
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error)
     handleError({ error: true, errors: { other: true } })
-    return
-  }
-
-  const decoder = new TextDecoder()
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) {
-      close()
-      break
-    }
-
-    const text = decoder.decode(value)
-    const { type, data } = JSON.parse(text)
-
-    switch (type) {
-      case 'objects':
-        handleObjects(data)
-        break
-      case 'guide':
-        handleGuides(data)
-        break
-      case 'error':
-        handleError(data)
-        break
-    }
   }
 }
