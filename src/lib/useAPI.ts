@@ -2,7 +2,7 @@ import type {
   ObjectResponseData,
   GuideResponseData,
   ErrorResponseData
-} from '../routes/api/guide/types'
+} from '../routes/api/guide/types' // $api가 작동하지 않음
 
 const resizeImage = (file: File, maxWidth: number, maxHeight: number) =>
   new Promise<string>((resolve, reject) => {
