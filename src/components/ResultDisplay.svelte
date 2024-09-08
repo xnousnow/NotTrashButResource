@@ -11,7 +11,10 @@
   export let regenerate: () => void
 </script>
 
-<div class="absolute left-0 top-0 flex w-full flex-col gap-2" transition:blur={{ duration: 300 }}>
+<div
+  class="absolute left-0 top-0 flex w-full flex-col gap-2 pb-24"
+  transition:blur={{ duration: 300 }}
+>
   {#each guides as guide}
     {#if 'guide' in guide}
       <div class="">
@@ -52,7 +55,7 @@
     {/if}
   {/each}
   <div
-    class="sticky bottom-0 flex w-full justify-center pb-10 pt-3 backdrop-blur"
+    class="fixed bottom-0 left-0 flex w-screen justify-center pb-10 pt-3 backdrop-blur"
     in:fly|global={{ y: 30, duration: 500, easing: backOut, delay: 300 }}
   >
     <SmallButton Icon={Refresh} text="다른 답변 받기" action={regenerate} />
