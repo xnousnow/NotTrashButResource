@@ -7,23 +7,21 @@
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import ResultDisplay from '$components/ResultDisplay.svelte'
-  import IssuesDisplay from '$components/IssuesDisplay.svelte'
-  import { resizeImage, useAPI } from '$lib/useAPI'
-
+  import ErrorDisplay from '$components/ErrorDisplay.svelte'
+  import { useAPI } from '$lib/useAPI'
   import type {
-    FullError,
-    IdentifiedObjects,
-    ObjectError,
-    ObjectGuide,
-    EachObject
+    ObjectResponseData,
+    GuideResponseData,
+    ErrorResponseData,
+    ResultObject,
+    ErrorInterface
   } from '../api/guide/types'
 
   let generating = true
-  let resized: string
 
   let objects: string[] = []
-  let guides: EachObject[] = []
-  let error: FullError = { error: false }
+  let guides: ResultObject[] = []
+  let error: ErrorInterface = { error: false }
 
   let imageEffect: HTMLCanvasElement
   let particles: { x: number; y: number; delay: number }[] = []
@@ -68,7 +66,7 @@
   }
 
   const generate = async function () {
-    if (!$image) await goto('/')
+    if (!$image) goto('/')
 
     generating = true
     error = { error: false }
@@ -78,32 +76,25 @@
     setTimeout(() => startEffect(), 0)
 
     try {
-      if (!resized) resized = await resizeImage($image!, 512, 512)
       useAPI(
-        resized,
+        $image!,
         $isApartment,
-        function (data: IdentifiedObjects) {
-          objects = data
+        function (data: ObjectResponseData) {
+          objects = data.objects
         },
-        function (data: ObjectGuide) {
-          guides.push(data)
-          error = { error: false }
+        function (data: GuideResponseData) {
+          guides = [...data.guide]
         },
-        function (data: ObjectError) {
-          guides.push(data)
-          if (guides.every((g) => 'error' in g)) {
-            error = { error: true, errors: { noMatches: true } }
-          }
-        },
-        function (data: FullError) {
+        function (data: ErrorResponseData) {
           error = data
         },
-        function () {
+        () => {
           generating = false
+          stopEffect()
         }
       )
     } catch {
-      error = { error: true }
+      error = { error: true, errors: { other: true } }
       generating = false
     }
   }
@@ -122,11 +113,13 @@
       class="absolute left-0 top-0 flex h-full w-full overflow-hidden"
       transition:fly={{ y: 30, duration: 300 }}
     >
-      <img
-        src={resized}
-        alt="Captured"
-        class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
-      />
+      {#if $image}
+        <img
+          src={URL.createObjectURL($image)}
+          alt="Captured"
+          class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
+        />
+      {/if}
       <canvas bind:this={imageEffect} class="absolute left-0 top-0 h-full w-full opacity-30" />
       {#if objects.length}
         <ul
@@ -161,7 +154,11 @@
       </a>
       {#if $image}
         <div class="relative overflow-hidden rounded-3xl">
-          <img src={resized} alt="Captured" class="h-full max-h-[30vh] w-full object-cover" />
+          <img
+            src={URL.createObjectURL($image)}
+            alt="Captured"
+            class="h-full max-h-[30vh] w-full object-cover"
+          />
         </div>
       {/if}
       <div
@@ -169,8 +166,8 @@
         class:overflow-y-scroll={!generating}
       >
         <div class="relative">
-          {#if error.error || guides.every((g) => 'error' in g)}
-            <IssuesDisplay {error} {objects} regenerate={generate} />
+          {#if error.error}
+            <ErrorDisplay {error} usePlural={objects.length > 1} regenerate={generate} />
           {:else}
             <ResultDisplay {guides} regenerate={generate} />
           {/if}

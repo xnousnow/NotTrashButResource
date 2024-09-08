@@ -1,171 +1,187 @@
 import { env } from '$env/dynamic/private'
-import { getIdentificationPrompt, getFinalPrompt } from '$lib/prompts'
+// import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
+import { generateObject } from 'ai'
 import { createClient } from '@supabase/supabase-js'
-import { generateText, streamText } from 'ai'
 import type { RequestHandler } from './$types'
-import type { IdentificationResult, ObjectPairs, APIResponse, GuidebookData } from './types'
+import { identificationMessages, guideMessages } from '$lib/prompts'
+import type {
+  ErrorResponseData,
+  GuideResponseData,
+  MatchedIdentifiedObject,
+  ObjectResponseData,
+  ResponseTypes,
+  RetrievedGuide
+} from './types'
+import { identificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 
+// const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
 
-async function identifyObjects(
-  image: string,
-  guidebookNames: string[]
-): Promise<IdentificationResult> {
-  const result = await generateText({
-    model: openai(env.IMAGE_IDENTIFICATION_MODEL ?? 'gpt-4o'),
-    messages: getIdentificationPrompt(guidebookNames, image)
-  })
-  return result.text.trim().replace(/\n+/g, '\n')
-}
+let requestIndex = 0
 
-async function fetchGuidebookData(categories: string[]): Promise<GuidebookData[]> {
-  const { data: retrievedGuides } = await supabase
+const identifyObjects = async (image: string, categories: string[]) =>
+  generateObject({
+    model: openai('gpt-4o-2024-08-06'),
+    schema: identificationResponseSchema,
+    messages: identificationMessages(image, categories)
+  }).then((result) => result.object)
+
+const fetchGuides = async (queries: string[]) =>
+  supabase
     .from('guidebook')
     .select('*')
-    .in('name', categories)
-  return retrievedGuides?.map(({ name, guide, tips }) => ({ name, guide, tips })) || []
+    .in('name', queries)
+    .then(
+      (result) =>
+        result.data?.map(({ name, guide, tips, category }) => ({
+          name,
+          guide: guide.split('\n'),
+          tips: tips?.split('\n'),
+          category
+        })) ?? []
+    )
+
+const generateGuide = async (
+  description: string,
+  identifiedObjects: MatchedIdentifiedObject[],
+  sourceGuides: RetrievedGuide[],
+  isApartment: boolean
+) =>
+  generateObject({
+    model: openai('gpt-4o-mini'),
+    output: 'array',
+    schema: singleGuideResponseSchema,
+    messages: guideMessages(
+      description ?? '',
+      identifiedObjects as MatchedIdentifiedObject[],
+      sourceGuides,
+      isApartment
+    )
+  }).then((result) => result.object)
+
+const sendData = (
+  controller: ReadableStreamDefaultController,
+  type: ResponseTypes,
+  data: ObjectResponseData | GuideResponseData | ErrorResponseData
+) => {
+  controller.enqueue(JSON.stringify({ type, data }))
 }
 
-async function generateGuide(
-  isApartment: boolean,
-  imageDescription: string,
-  objects: ObjectPairs,
-  guide: GuidebookData[]
-): Promise<APIResponse> {
-  return streamText({
-    model: openai(env.GUIDE_GENERATION_MODEL ?? 'gpt-4o-mini'),
-    messages: getFinalPrompt(isApartment, imageDescription, objects, guide)
-  })
-}
-
-async function processStream(
-  result: APIResponse,
-  controller: ReadableStreamDefaultController<string>
-) {
-  const reader = result.textStream.getReader()
-  let buffer = ''
-  let isExpectingMoreData = true
-
-  while (isExpectingMoreData) {
-    const { done, value } = await reader.read()
-    isExpectingMoreData = !done
-
-    if (value) {
-      buffer += value
-
-      buffer = buffer.replace(/\n+/g, '\n')
-      let newlineIndex
-
-      while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-        const jsonString = buffer.slice(0, newlineIndex).trim()
-        buffer = buffer.slice(newlineIndex + 1)
-
-        if (jsonString) {
-          try {
-            const object = JSON.parse(jsonString)
-            controller.enqueue(JSON.stringify(object))
-          } catch (error) {
-            console.error('Error parsing JSON:', error, jsonString)
-          }
-        }
-      }
-    }
-  }
-
-  if (buffer.trim()) {
-    try {
-      const object = JSON.parse(buffer.trim())
-      controller.enqueue(JSON.stringify(object))
-    } catch (error) {
-      console.error('Error parsing JSON:', error, buffer)
-      controller.enqueue(JSON.stringify({ error: true, errors: { generation: true } }))
-    }
-  }
-}
-
-async function handleRequest(request: Request): Promise<Response> {
+export const POST: RequestHandler = async ({ request }) => {
   const { image, isApartment } = await request.json()
+
+  const index = requestIndex++
+  const startTime = Date.now()
+  const timings: { step: string; duration: number }[] = []
+
+  console.log(`✦ #${index} Received request`)
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const { data: guidebookNamesData } = await supabase.from('guidebook').select('name')
-        const guidebookNames = guidebookNamesData?.map(({ name }) => name) ?? []
+        const categoriesStartTime = Date.now()
+        const categories = await supabase
+          .from('guidebook')
+          .select('name')
+          .then((result) => result.data?.map(({ name }) => name) ?? [])
+        timings.push({ step: 'Fetching categories', duration: Date.now() - categoriesStartTime })
+        console.log(
+          `✧ #${index} Fetched categories: ${categories.slice(0, 5).join(', ')}... (${categories.length})`
+        )
 
-        const identificationResult = await identifyObjects(image, guidebookNames)
+        const identificationStartTime = Date.now()
+        const identificationResult = await identifyObjects(image, categories)
+        timings.push({
+          step: 'Identifying objects',
+          duration: Date.now() - identificationStartTime
+        })
+        console.log(
+          `✧ #${index} Object identification result: ${JSON.stringify(identificationResult)}`
+        )
 
-        if (identificationResult.includes('물건 없음') || identificationResult.includes('오류')) {
-          controller.enqueue(
-            JSON.stringify({
-              error: true,
-              errors: {
-                noObject: identificationResult.includes('물건 없음'),
-                other: identificationResult.includes('오류')
-              }
-            })
+        if ('error' in identificationResult.result) {
+          console.log(`✧ #${index} Error generated`)
+          sendData(controller, 'error', {
+            error: true,
+            errors: identificationResult.result.errors ?? { other: true }
+          })
+          controller.close()
+          console.log(`✧ #${index} Closed controller`)
+          return
+        }
+
+        // identified objects that has categories (length > 0 or not null)
+        const identifiedObjectsWithCategories = identificationResult.result?.filter(
+          (obj: object): obj is { name: string; category: string[] } =>
+            'category' in obj && obj.category !== null
+        )
+
+        if (identifiedObjectsWithCategories?.length === 0) {
+          sendData(controller, 'error', { error: true, errors: { noMatches: true } })
+          console.log(`✧ #${index} No objects found`)
+          controller.close()
+          console.log(`✧ #${index} Closed controller`)
+          return
+        } else if ('result' in identificationResult) {
+          const identifiedObjects = identificationResult.result!.map(({ name }) => name)
+          sendData(controller, 'objects', { objects: identifiedObjects })
+          console.log(
+            `✧ #${index} Successfully identified objects: ${identifiedObjects.join(', ')}`
           )
         } else {
-          const imageDescription = identificationResult.split('\n')[0]
-          const objectPairs: ObjectPairs = identificationResult
-            .split('\n')
-            .slice(2)
-            .reduce((acc, line) => {
-              const parts = line.split(': ')
-              const object = parts[0].slice(2)
-              const category = parts.length > 1 ? parts[1].split(', ') : []
-              acc[object] = category
-              return acc
-            }, {} as ObjectPairs)
+          console.log(`✧ #${index} Unexpected error occurred`)
+          throw new Error('Unexpected Error Occurred')
+        }
 
-          const objects = Object.keys(objectPairs)
-          const categories = Object.values(objectPairs)
+        const guidesStartTime = Date.now()
+        const guideQueries = identifiedObjectsWithCategories.map(({ category }) => category).flat()
+        console.log(
+          `✧ #${index} Searching guides for: ${guideQueries.join(', ')} (${guideQueries.length})`
+        )
+        const retrievedGuides = await fetchGuides(guideQueries)
+        timings.push({ step: 'Fetching guides', duration: Date.now() - guidesStartTime })
+        console.log(
+          `✧ #${index} Fetched guides: ${JSON.stringify(retrievedGuides)} (${retrievedGuides.length})`
+        )
 
-          controller.enqueue(JSON.stringify(objects))
+        const generationStartTime = Date.now()
+        const generatedGuides = await generateGuide(
+          identificationResult.description,
+          identifiedObjectsWithCategories,
+          retrievedGuides,
+          isApartment
+        )
+        timings.push({ step: 'Generating guides', duration: Date.now() - generationStartTime })
+        console.log(
+          `✧ #${index} Generated guides: ${JSON.stringify(generatedGuides)} (${generatedGuides.length})`
+        )
 
-          const objectsWithoutCategories = objects.filter((object) => !objectPairs[object].length)
-          const objectsWithErrors = new Set<string>()
-
-          if (objectsWithoutCategories.length === objects.length) {
-            controller.enqueue(JSON.stringify({ error: true, errors: { noMatches: true } }))
-            return controller.close()
-          }
-
-          if (objectsWithoutCategories.length) {
-            objectsWithoutCategories.forEach((object) => {
-              controller.enqueue(
-                JSON.stringify({ name: object, error: true, errors: { noMatch: true } })
-              )
-              objectsWithErrors.add(object)
-            })
-          }
-
-          const guide = await fetchGuidebookData(categories.flat())
-          const objectPairsWithCategories: ObjectPairs = Object.keys(objectPairs).reduce(
-            (acc, object) => {
-              if (objectPairs[object].length && !objectsWithErrors.has(object)) {
-                acc[object] = objectPairs[object]
-              }
-              return acc
-            },
-            {} as ObjectPairs
-          )
-
-          const result = await generateGuide(
-            isApartment,
-            imageDescription,
-            objectPairsWithCategories,
-            guide
-          )
-
-          await processStream(result, controller)
+        if (generatedGuides.length === 0) {
+          sendData(controller, 'error', { error: true, errors: { other: true } })
+          console.log(`✧ #${index} No guides generated`)
+        } else if (generatedGuides.every((guide) => 'error' in guide && guide.error)) {
+          sendData(controller, 'error', { error: true, errors: { other: true } })
+          console.log(`✧ #${index} All guides have errors`)
+        } else {
+          sendData(controller, 'guide', { guide: generatedGuides })
+          console.log(`✧ #${index} Sent guides to client`)
         }
       } catch (error) {
-        console.error('Error in processing:', error)
-        controller.enqueue(JSON.stringify({ error: true, errors: { processing: true } }))
+        sendData(controller, 'error', { error: true, errors: { other: true } })
+        console.log(`✧ #${index} Error catched: ${error}`)
+        console.error(error)
       } finally {
         controller.close()
+        const totalTime = Date.now() - startTime
+        const indent = ' '.repeat(4 + index.toString().length)
+        console.log(`✧ #${index} Timings:`)
+        timings.forEach(({ step, duration }) => {
+          console.log(`${indent}${step}: ${duration}ms`)
+        })
+        console.log(`${indent}Total time: ${totalTime}ms`)
+        console.log(`✧ #${index} Closed controller`)
       }
     }
   })
@@ -177,5 +193,3 @@ async function handleRequest(request: Request): Promise<Response> {
     }
   })
 }
-
-export const POST: RequestHandler = ({ request }) => handleRequest(request)
