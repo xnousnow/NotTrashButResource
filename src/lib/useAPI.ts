@@ -47,7 +47,7 @@ function findJsonObjects(str: string): string[] {
       depth--
       if (depth === 0 && startIndex !== -1) {
         objects.push(str.substring(startIndex, i + 1))
-        startIndex = -1 // Reset startIndex
+        startIndex = -1
       }
     }
   }
@@ -108,7 +108,6 @@ export const useAPI = async (
               break
           }
 
-          // Remove the processed object from the buffer
           const endIndex = buffer.indexOf(jsonString) + jsonString.length
           buffer = buffer.slice(endIndex)
         } catch (error) {
