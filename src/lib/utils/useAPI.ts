@@ -1,5 +1,5 @@
 import type { ObjectResponseData, GuideResponseData, ErrorResponseData } from '$api/guide/types'
-import { processImage } from './processImage'
+import { processImage } from '$utils/processImage'
 
 function findJsonObjects(str: string): string[] {
   const objects: string[] = []

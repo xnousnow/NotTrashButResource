@@ -8,7 +8,7 @@
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import ErrorDisplay from '$components/ErrorDisplay.svelte'
-  import { useAPI } from '$lib/useAPI'
+  import { useAPI } from '$utils/useAPI'
   import type {
     ObjectResponseData,
     GuideResponseData,
