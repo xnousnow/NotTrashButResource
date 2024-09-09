@@ -96,6 +96,7 @@
     } catch {
       error = { error: true, errors: { other: true } }
       generating = false
+      stopEffect()
     }
   }
 
