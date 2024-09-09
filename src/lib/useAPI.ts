@@ -1,6 +1,27 @@
 import type { ObjectResponseData, GuideResponseData, ErrorResponseData } from '$api/guide/types'
 import { processImage } from './processImage'
 
+function findJsonObjects(str: string): string[] {
+  const objects: string[] = []
+  let depth = 0
+  let startIndex = -1
+
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '{') {
+      if (depth === 0) startIndex = i
+      depth++
+    } else if (str[i] === '}') {
+      depth--
+      if (depth === 0 && startIndex !== -1) {
+        objects.push(str.substring(startIndex, i + 1))
+        startIndex = -1
+      }
+    }
+  }
+
+  return objects
+}
+
 export const useAPI = async (
   image: File,
   isApartment: boolean,
@@ -29,17 +50,17 @@ export const useAPI = async (
 
     while (true) {
       const { done, value } = await reader.read()
-      if (done) break
+      if (done) {
+        close()
+        break
+      }
 
       buffer += decoder.decode(value, { stream: true })
 
-      let startIndex = 0
-      while (true) {
-        const endIndex = buffer.indexOf('}', startIndex) + 1
-        if (endIndex === 0) break
+      const jsonObjects = findJsonObjects(buffer)
 
+      for (const jsonString of jsonObjects) {
         try {
-          const jsonString = buffer.slice(startIndex, endIndex)
           const { type, data } = JSON.parse(jsonString)
 
           switch (type) {
@@ -54,18 +75,15 @@ export const useAPI = async (
               break
           }
 
-          startIndex = endIndex
-        } catch {
-          startIndex++
+          const endIndex = buffer.indexOf(jsonString) + jsonString.length
+          buffer = buffer.slice(endIndex)
+        } catch (error) {
+          console.error('Error parsing JSON:', error)
         }
       }
-
-      buffer = buffer.slice(startIndex)
     }
   } catch (error) {
     console.error(error)
     handleError({ error: true, errors: { other: true } })
-  } finally {
-    close()
   }
 }
