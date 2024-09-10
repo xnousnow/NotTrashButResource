@@ -1,7 +1,7 @@
 import type { ObjectResponseData, GuideResponseData, ErrorResponseData } from '$api/guide/types'
 import { processImage } from '$utils/processImage'
 
-function findJsonObjects(str: string): string[] {
+const findJsonObjects = (str: string): string[] => {
   const objects: string[] = []
   let depth = 0
   let startIndex = -1

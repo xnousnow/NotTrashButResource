@@ -24,7 +24,7 @@
   let guides: ResultObject[] = []
   let error: ErrorInterface = { error: false }
 
-  const generate = async function () {
+  const generate = async () => {
     if (!$image) goto('/')
 
     generating = true
