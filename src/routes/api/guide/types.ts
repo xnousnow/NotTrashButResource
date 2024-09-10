@@ -84,6 +84,7 @@ export interface ErrorResponseData {
   errors: {
     noObjects?: boolean
     noMatches?: boolean
+    imageError?: boolean
     other?: boolean
   }
 }
