@@ -31,7 +31,7 @@ export const identificationResponseSchema = z.object({
       error: z.literal(true),
       errors: z.object({
         noObjects: z.boolean().describe('이미지에 물건이 없음'),
-        notReal: z.boolean().describe('이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음'),
+        imageError: z.boolean().describe('이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음, 또는 이미지 오류'),
         other: z.boolean().describe('기타 이미지 오류')
       })
     })
