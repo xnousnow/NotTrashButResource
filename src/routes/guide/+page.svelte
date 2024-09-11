@@ -6,6 +6,7 @@
 
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
+  import AvgPace from '~icons/material-symbols/AvgPace'
 
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import ErrorDisplay from '$components/ErrorDisplay.svelte'
@@ -24,6 +25,8 @@
 
   let generating = true
 
+  let time = 0
+
   let objects: string[] = []
   let guides: ResultObject[] = []
   let error: ErrorInterface = { error: false }
@@ -35,8 +38,11 @@
     error = { error: false }
     objects = []
     guides = []
+    time = 0
 
     try {
+      const startTime = Date.now()
+
       useAPI(
         $image!,
         $isApartment,
@@ -51,6 +57,7 @@
         },
         () => {
           generating = false
+          time = Date.now() - startTime
         }
       )
     } catch {
@@ -109,15 +116,24 @@
       <a href="/">
         <ArrowBack class="h-6 w-6" />
       </a>
-      {#if $image}
-        <div class="relative overflow-hidden rounded-3xl">
-          <img
-            src={URL.createObjectURL($image)}
-            alt="Captured"
-            class="h-full max-h-[30vh] w-full object-cover"
-          />
-        </div>
-      {/if}
+      <div class="relative">
+        {#if $image}
+          <div class="relative overflow-hidden rounded-3xl">
+            <img
+              src={URL.createObjectURL($image)}
+              alt="Captured"
+              class="h-full max-h-[30vh] w-full object-cover"
+            />
+          </div>
+          <div
+            class="absolute bottom-2 right-2 flex gap-2 rounded-full bg-black/30 px-2 py-1"
+            transition:blur={{ duration: 300 }}
+          >
+            <AvgPace class="h-6 w-6" />
+            {(time / 1000).toFixed(2)}s
+          </div>
+        {/if}
+      </div>
       <div
         class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
         class:overflow-y-scroll={!generating}
