@@ -1,10 +1,15 @@
 import { env } from '$env/dynamic/private'
-// import { createAnthropic } from '@ai-sdk/anthropic'
-import { createOpenAI } from '@ai-sdk/openai'
-import { generateObject } from 'ai'
+
 import { createClient } from '@supabase/supabase-js'
+
+import { createOpenAI } from '@ai-sdk/openai'
+// import { createAnthropic } from '@ai-sdk/anthropic'
+import { generateObject } from 'ai'
+
 import type { RequestHandler } from './$types'
+
 import { identificationMessages, guideMessages } from '$lib/prompts'
+
 import type {
   ErrorResponseData,
   GuideResponseData,

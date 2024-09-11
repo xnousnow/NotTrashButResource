@@ -1,8 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { blur } from 'svelte/transition'
-
-  import { fade } from 'svelte/transition'
+  import { blur, fade } from 'svelte/transition'
 
   import Info from '~icons/material-symbols/Info'
 

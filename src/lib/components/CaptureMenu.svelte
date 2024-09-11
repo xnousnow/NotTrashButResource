@@ -1,10 +1,12 @@
 <script lang="ts">
-  import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
-  import House from '~icons/material-symbols/House'
-  import Apartment from '~icons/material-symbols/Apartment'
-  import { image, isApartment, localStorageLoaded } from '$lib/stores'
-  import { goto } from '$app/navigation'
   import { blur } from 'svelte/transition'
+  import { goto } from '$app/navigation'
+
+  import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
+  import Apartment from '~icons/material-symbols/Apartment'
+  import House from '~icons/material-symbols/House'
+
+  import { image, isApartment, localStorageLoaded } from '$lib/stores'
 
   export let imageFile: File
   export let video: HTMLVideoElement

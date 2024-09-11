@@ -1,14 +1,17 @@
 <script lang="ts">
   import { blur } from 'svelte/transition'
   import { goto } from '$app/navigation'
+
   import CloudOff from '~icons/material-symbols/CloudOff'
   import ViewInArOff from '~icons/material-symbols/ViewInArOff'
   import Description from '~icons/material-symbols/Description'
   import PhotoCamera from '~icons/material-symbols/PhotoCamera'
   import BrokenImage from '~icons/material-symbols/BrokenImage'
   import Refresh from '~icons/material-symbols/Refresh'
-  import SmallButton from './SmallButton.svelte'
-  import type { ErrorResponseData } from '../routes/api/guide/types'
+
+  import SmallButton from '$components/SmallButton.svelte'
+
+  import type { ErrorResponseData } from '$api/guide/types'
 
   export let error: ErrorResponseData
   export let usePlural: boolean

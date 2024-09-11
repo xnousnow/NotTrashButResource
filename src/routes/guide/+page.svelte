@@ -3,12 +3,17 @@
   import { blur, fly } from 'svelte/transition'
   import { backOut } from 'svelte/easing'
   import { goto } from '$app/navigation'
-  import { image, isApartment } from '$lib/stores'
+
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
+
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import ErrorDisplay from '$components/ErrorDisplay.svelte'
-  import { useAPI } from '$lib/useAPI'
+  import ParticleEffect from '$components/ParticleEffect.svelte'
+
+  import { image, isApartment } from '$lib/stores'
+  import { useAPI } from '$utils/useAPI'
+
   import type {
     ObjectResponseData,
     GuideResponseData,
@@ -23,57 +28,13 @@
   let guides: ResultObject[] = []
   let error: ErrorInterface = { error: false }
 
-  let imageEffect: HTMLCanvasElement
-  let particles: { x: number; y: number; delay: number }[] = []
-  let animationId: number
-
-  const resizeCanvas = () => {
-    imageEffect.width = window.innerWidth
-    imageEffect.height = window.innerHeight
-    initParticles()
-  }
-
-  const initParticles = () => {
-    const particleCount = Math.floor(20000 / (window.devicePixelRatio || 1))
-    particles = Array.from({ length: particleCount }, () => ({
-      x: Math.random() * imageEffect.width,
-      y: Math.random() * imageEffect.height,
-      delay: Math.random() * 2
-    }))
-  }
-
-  const startEffect = () => {
-    resizeCanvas()
-    const ctx = imageEffect.getContext('2d')!
-
-    const drawParticles = () => {
-      ctx.clearRect(0, 0, imageEffect.width, imageEffect.height)
-      particles.forEach(({ x, y, delay }) => {
-        const time = Date.now() / 1000 + delay
-        const opacity = (Math.sin(time * Math.PI) + 1) / 2
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`
-        ctx.fillRect(x, y, 1, 1)
-      })
-      requestAnimationFrame(drawParticles)
-    }
-    drawParticles()
-  }
-
-  const stopEffect = () => {
-    if (animationId) {
-      cancelAnimationFrame(animationId)
-    }
-  }
-
-  const generate = async function () {
+  const generate = async () => {
     if (!$image) goto('/')
 
     generating = true
     error = { error: false }
     objects = []
     guides = []
-
-    setTimeout(() => startEffect(), 0)
 
     try {
       useAPI(
@@ -90,7 +51,6 @@
         },
         () => {
           generating = false
-          stopEffect()
         }
       )
     } catch {
@@ -100,13 +60,10 @@
   }
 
   onMount(async () => {
-    startEffect()
     await generate()
-    stopEffect()
   })
 </script>
 
-<svelte:window on:resize={resizeCanvas} />
 <div class="absolute left-0 top-0 h-full w-full" transition:blur={{ duration: 300 }}>
   {#if generating}
     <div
@@ -120,7 +77,7 @@
           class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
         />
       {/if}
-      <canvas bind:this={imageEffect} class="absolute left-0 top-0 h-full w-full opacity-30" />
+      <ParticleEffect />
       {#if objects.length}
         <ul
           class="absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center text-3xl font-bold opacity-50"
