@@ -3,13 +3,17 @@
   import { blur, fly } from 'svelte/transition'
   import { backOut } from 'svelte/easing'
   import { goto } from '$app/navigation'
-  import { image, isApartment } from '$lib/stores'
+
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
+
   import ResultDisplay from '$components/ResultDisplay.svelte'
   import ErrorDisplay from '$components/ErrorDisplay.svelte'
   import ParticleEffect from '$components/ParticleEffect.svelte'
+
+  import { image, isApartment } from '$lib/stores'
   import { useAPI } from '$utils/useAPI'
+
   import type {
     ObjectResponseData,
     GuideResponseData,

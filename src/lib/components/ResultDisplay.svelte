@@ -1,10 +1,13 @@
 <script lang="ts">
   import { blur, fly } from 'svelte/transition'
   import { backOut } from 'svelte/easing'
+
   import Refresh from '~icons/material-symbols/Refresh'
   import Description from '~icons/material-symbols/Description'
-  import SmallButton from '$components/SmallButton.svelte'
   import ImportContacts from '~icons/material-symbols/ImportContacts'
+
+  import SmallButton from '$components/SmallButton.svelte'
+
   import type { ResultObject } from '$api/guide/types'
 
   export let guides: ResultObject[]
