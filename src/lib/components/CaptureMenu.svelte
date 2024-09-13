@@ -3,10 +3,10 @@
   import { goto } from '$app/navigation'
 
   import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
-  import Apartment from '~icons/material-symbols/Apartment'
-  import House from '~icons/material-symbols/House'
+  import ImageSearch from '~icons/material-symbols/ImageSearch'
+  import EditNote from '~icons/material-symbols/EditNote'
 
-  import { image, isApartment, localStorageLoaded } from '$lib/stores'
+  import { image, inputMode, localStorageLoaded } from '$lib/stores'
 
   export let imageFile: File
   export let video: HTMLVideoElement
@@ -54,17 +54,17 @@
   ></button>
   <button
     class="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/20 duration-200 hover:bg-white/30"
-    on:click={() => isApartment.set(!$isApartment)}
+    on:click={() => inputMode.set($inputMode === 'image' ? 'text' : 'image')}
   >
     {#if !$localStorageLoaded}
       <div transition:blur={{ duration: 200, amount: 2 }} class="absolute"></div>
-    {:else if $isApartment}
+    {:else if $inputMode === 'image'}
       <div transition:blur={{ duration: 200, amount: 2 }} class="absolute">
-        <Apartment class="h-6 w-6" />
+        <ImageSearch class="h-6 w-6" />
       </div>
     {:else}
       <div transition:blur={{ duration: 200, amount: 2 }} class="absolute">
-        <House class="h-6 w-6" />
+        <EditNote class="h-6 w-6" />
       </div>
     {/if}
   </button>

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const identificationResponseSchema = z.object({
+export const imageIdentificationResponseSchema = z.object({
   description: z
     .string()
     .describe(
@@ -39,6 +39,21 @@ export const identificationResponseSchema = z.object({
     })
   ])
 })
+
+export const eachCategorizationResponseSchema = z.union([
+  z.object({
+    name: z.string().describe('물건의 이름'),
+    category: z.array(z.string()).describe('알맞는 카테고리(들)')
+  }),
+  z.object({
+    name: z.string().describe('물건의 이름'),
+    error: z.literal(true),
+    errors: z.object({
+      noMatch: z.boolean().describe('물건에 알맞는 카테고리가 없음'),
+      other: z.boolean().describe('기타 오류')
+    })
+  })
+])
 
 export const singleGuideResponseSchema = z.union([
   z.object({

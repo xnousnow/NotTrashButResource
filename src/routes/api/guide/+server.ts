@@ -8,7 +8,7 @@ import { generateObject } from 'ai'
 
 import type { RequestHandler } from './$types'
 
-import { identificationMessages, guideMessages } from '$lib/prompts'
+import { imageIdentificationMessages, guideMessages } from '$lib/prompts'
 
 import type {
   ErrorResponseData,
@@ -18,7 +18,7 @@ import type {
   ResponseTypes,
   RetrievedGuide
 } from './types'
-import { identificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
+import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 
 // const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
@@ -29,8 +29,8 @@ let requestIndex = 0
 const identifyObjects = async (image: string, categories: string[]) =>
   generateObject({
     model: openai('gpt-4o-2024-08-06'),
-    schema: identificationResponseSchema,
-    messages: identificationMessages(image, categories)
+    schema: imageIdentificationResponseSchema,
+    messages: imageIdentificationMessages(image, categories)
   }).then((result) => result.object)
 
 const fetchGuides = async (queries: string[]) =>
