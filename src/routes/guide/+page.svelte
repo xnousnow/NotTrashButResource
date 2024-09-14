@@ -37,7 +37,7 @@
     guides = []
 
     try {
-      useAPI(
+      useAPI.image(
         $image!,
         $isApartment,
         function (data: ObjectResponseData) {
