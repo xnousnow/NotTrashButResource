@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { blur } from 'svelte/transition'
   import { goto } from '$app/navigation'
+  import { blur } from 'svelte/transition'
 
   import AddPhotoAlternate from '~icons/material-symbols/AddPhotoAlternate'
-  import ImageSearch from '~icons/material-symbols/ImageSearch'
-  import EditNote from '~icons/material-symbols/EditNote'
+  import Keyboard from '~icons/material-symbols/Keyboard'
+  import ViewInAr from '~icons/material-symbols/ViewInAr'
 
   import { image, inputMode, localStorageLoaded } from '$lib/stores'
 
@@ -60,11 +60,11 @@
       <div transition:blur={{ duration: 200, amount: 2 }} class="absolute"></div>
     {:else if $inputMode === 'image'}
       <div transition:blur={{ duration: 200, amount: 2 }} class="absolute">
-        <ImageSearch class="h-6 w-6" />
+        <ViewInAr class="h-6 w-6" />
       </div>
     {:else}
       <div transition:blur={{ duration: 200, amount: 2 }} class="absolute">
-        <EditNote class="h-6 w-6" />
+        <Keyboard class="h-6 w-6" />
       </div>
     {/if}
   </button>
