@@ -40,11 +40,11 @@
       useAPI.image(
         $image!,
         $isApartment,
-        function (data: ObjectResponseData) {
-          objects = data.objects
+        function (data: ObjectResponseData['objects']) {
+          objects = data
         },
-        function (data: GuideResponseData) {
-          guides = [...data.guide]
+        function (data: GuideResponseData['guide']) {
+          guides = [...data]
         },
         function (data: ErrorResponseData) {
           error = data

@@ -27,8 +27,8 @@ export const useAPI = {
   image: async (
     image: File,
     isApartment: boolean,
-    handleObjects: (objects: ObjectResponseData) => void,
-    handleGuides: (guides: GuideResponseData) => void,
+    handleObjects: (objects: ObjectResponseData['objects']) => void,
+    handleGuides: (guides: GuideResponseData['guide']) => void,
     handleError: (error: ErrorResponseData) => void,
     close: () => void
   ) => {
@@ -50,7 +50,7 @@ export const useAPI = {
 
   text: async (
     object: string,
-    handleGuides: (guides: GuideResponseData) => void,
+    handleGuides: (guides: GuideResponseData['guide']) => void,
     handleError: (error: ErrorResponseData) => void
   ) => {
     try {
@@ -64,7 +64,7 @@ export const useAPI = {
 
       switch (type) {
         case 'guide':
-          handleGuides(data)
+          handleGuides(data.guide)
           break
         case 'error':
           handleError(data)
@@ -79,8 +79,8 @@ export const useAPI = {
 
 const handleStreamResponse = async (
   response: Response,
-  handleObjects: (objects: ObjectResponseData) => void,
-  handleGuides: (guides: GuideResponseData) => void,
+  handleObjects: (objects: ObjectResponseData['objects']) => void,
+  handleGuides: (guides: GuideResponseData['guide']) => void,
   handleError: (error: ErrorResponseData) => void,
   close: () => void
 ) => {
@@ -110,10 +110,10 @@ const handleStreamResponse = async (
 
         switch (type) {
           case 'objects':
-            handleObjects(data)
+            handleObjects(data.objects)
             break
           case 'guide':
-            handleGuides(data)
+            handleGuides(data.guide)
             break
           case 'error':
             handleError(data)
