@@ -1,18 +1,22 @@
 <script lang="ts">
+  import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
-  import { blur, fade } from 'svelte/transition'
+  import { quintOut } from 'svelte/easing'
+  import { blur, fly } from 'svelte/transition'
 
   import Apartment from '~icons/material-symbols/Apartment'
   import House from '~icons/material-symbols/House'
 
   import CaptureMenu from '$components/CaptureMenu.svelte'
 
-  import { isApartment, localStorageLoaded } from '$lib/stores'
+  import { inputMode, inputStore, isApartment, localStorageLoaded } from '$lib/stores'
 
   let video: HTMLVideoElement
   let imageFile: File
 
-  onMount(() => {
+  let textInput = ''
+
+  const initializeCamera = async () => {
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
       .then((stream) => {
@@ -21,7 +25,52 @@
       .catch((error) => {
         console.error('Error accessing the camera', error)
       })
+  }
+
+  onMount(() => {
+    inputMode.subscribe((value) => {
+      if (value === 'image') {
+        initializeCamera()
+        inputStore.set(textInput)
+      }
+    })
   })
+
+  function focusOnElement(node: HTMLElement) {
+    node.focus()
+  }
+
+  const upload = (event: Event) => {
+    const inputElement = event.target as HTMLInputElement
+    if (inputElement.files && inputElement.files[0]) {
+      imageFile = inputElement.files[0]
+      inputStore.set(imageFile)
+      goto('/guide')
+    }
+  }
+
+  const capture = () => {
+    if ($inputMode === 'image') {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob((blob) => {
+        if (blob) {
+          imageFile = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+        } else {
+          console.error('Failed to capture image from video.')
+          return
+        }
+        inputStore.set(imageFile)
+        goto('/guide')
+      }, 'image/jpeg')
+    } else if ($inputMode === 'text') {
+      inputStore.set(textInput)
+      goto('/guide')
+    }
+  }
 </script>
 
 <div
@@ -47,23 +96,42 @@
         {/if}
       </button>
     </div>
-    {#if imageFile}
-      <img
-        src={URL.createObjectURL(imageFile)}
-        alt="Captured"
-        class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
-        transition:fade={{ duration: 300 }}
-      />
-    {:else}
-      <video
-        bind:this={video}
-        class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
-        muted
-        autoplay
-        playsinline
-        transition:fade={{ duration: 300 }}
-      ></video>
-    {/if}
+    <input
+      type="file"
+      accept="image/*"
+      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0"
+      on:change={upload}
+    />
+    <div class="relative h-full w-full">
+      {#if $inputMode === 'image'}
+        <div
+          in:blur={{ duration: 300, delay: 80 }}
+          out:blur={{ duration: 300 }}
+          class="absolute left-0 top-0 h-full w-full bg-black/50"
+        >
+          <video
+            bind:this={video}
+            class="absolute left-1/2 top-1/2 h-auto min-h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2 transform object-cover"
+            muted
+            autoplay
+            playsinline
+          ></video>
+        </div>
+      {:else if $inputMode === 'text'}
+        <div
+          class="absolute left-0 top-0 h-full w-full px-3 pt-20"
+          in:fly={{ y: 30, duration: 300, easing: quintOut, delay: 80 }}
+          out:fly={{ y: 30, duration: 300, easing: quintOut }}
+        >
+          <textarea
+            use:focusOnElement
+            class="h-full w-full resize-none bg-transparent text-4xl font-medium placeholder:text-white/60 focus:outline-none"
+            placeholder={'분리배출할 물건을\n입력해주세요'}
+            bind:value={textInput}
+          ></textarea>
+        </div>
+      {/if}
+    </div>
   </div>
-  <CaptureMenu {imageFile} {video} />
+  <CaptureMenu {upload} {capture} />
 </div>

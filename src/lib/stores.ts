@@ -1,8 +1,20 @@
-import { writable } from 'svelte/store'
+import { writable, derived } from 'svelte/store'
 
-export const image = writable<File | null>(null)
-export const isApartment = writable(true)
 export const inputMode = writable<'image' | 'text'>('image')
+
+// Define a type for the input value based on the input mode
+type InputValue = File | string | null
+
+export const inputStore = writable<InputValue>(null)
+
+export const input = derived([inputMode, inputStore], ([$inputMode, $inputStore]) => {
+  if ($inputMode === 'image') {
+    return $inputStore instanceof File || $inputStore === null ? $inputStore : null
+  } else {
+    return typeof $inputStore === 'string' || $inputStore === null ? $inputStore : null
+  }
+})
+export const isApartment = writable(true)
 export const localStorageLoaded = writable(false)
 
 if (typeof window !== 'undefined') {

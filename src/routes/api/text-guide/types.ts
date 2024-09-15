@@ -22,15 +22,6 @@ export interface ObjectError {
 
 export type ResultObject = ObjectGuide | ObjectError
 
-export interface ErrorResponse {
-  error: true
-  errors: {
-    unrelated?: boolean
-    noMatches?: boolean
-    other?: boolean
-  }
-}
-
 export type ResponseTypes = 'guide' | 'error'
 
 export interface ResponseBase {
@@ -53,4 +44,9 @@ export interface ErrorResponseData {
     noMatches?: boolean
     other?: boolean
   }
+}
+
+export interface ErrorResponse extends ResponseBase {
+  type: 'error'
+  data: ErrorResponseData
 }

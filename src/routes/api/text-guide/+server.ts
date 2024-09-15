@@ -66,8 +66,13 @@ export const POST: RequestHandler = async ({ request }) => {
 
     if (categorizationResult.length == 0) {
       const errorResponse: ErrorResponse = {
-        error: true,
-        errors: { unrelated: true }
+        type: 'error',
+        data: {
+          error: true,
+          errors: {
+            unrelated: true
+          }
+        }
       }
       return new Response(JSON.stringify(errorResponse))
     }
@@ -98,7 +103,7 @@ export const POST: RequestHandler = async ({ request }) => {
             category: [categoryName],
             guide: matchingGuide?.guide ?? [],
             tips: matchingGuide?.tips ?? [],
-            reference: matchingGuide?.name ?? ''
+            reference: [matchingGuide?.name ?? '']
           }
         })
       } else {
@@ -113,7 +118,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(JSON.stringify(response))
   } catch (error) {
     console.error(`✧ #${index} Error occurred:`, error)
-    const errorResponse: ErrorResponse = { error: true, errors: { other: true } }
+    const errorResponse: ErrorResponse = { type: 'error', data: { error: true, errors: { other: true } } }
     return new Response(JSON.stringify(errorResponse))
   } finally {
     console.log(`✧ #${index} Timings:`)
