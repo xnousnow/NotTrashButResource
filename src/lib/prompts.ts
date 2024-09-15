@@ -45,6 +45,31 @@ export const categorizationMessages = (object: string, categories: string[]): Co
   },
   {
     role: 'user',
+    content: '투명페트병'
+  },
+  {
+    role: 'assistant',
+    content: '[ { "name": "투명 페트병", "category": "페트병" } ]'
+  },
+  {
+    role: 'user',
+    content: '아이폰'
+  },
+  {
+    role: 'assistant',
+    content: '[ { "name": "아이폰", "category": "휴대폰" } ]'
+  },
+  {
+    role: 'user',
+    content: '타이어랑 과자봉지'
+  },
+  {
+    role: 'assistant',
+    content:
+      '[ { "name": "타이어", "error": true, "errors": { "noMatch": true, "other": false } }, { "name": "과자 봉지", "category": "비닐" } ]'
+  },
+  {
+    role: 'user',
     content: object
   }
 ]
