@@ -82,6 +82,12 @@
 </script>
 
 <div class="absolute left-0 top-0 h-full w-full" transition:blur={{ duration: 300 }}>
+  <div class="absolute left-0 top-0 z-10 h-12 w-full bg-gradient-to-b from-black p-2">
+    <a href="/">
+      <ArrowBack class="h-6 w-6" />
+    </a>
+  </div>
+
   {#if generating && $inputMode === 'image'}
     <div
       class="absolute left-0 top-0 flex h-full w-full overflow-hidden"
@@ -122,19 +128,16 @@
     </div>
   {:else}
     <div
-      class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2 pb-0"
+      class="absolute left-0 top-0 flex h-full w-full flex-col gap-2 p-2 py-0"
       transition:blur={{ duration: 300 }}
     >
-      <a href="/">
-        <ArrowBack class="h-6 w-6" />
-      </a>
       {#if $input && $inputMode === 'image'}
         <div class="relative overflow-hidden rounded-3xl">
           <img src={inputUrl} alt="Captured" class="h-full max-h-[30vh] w-full object-cover" />
         </div>
       {/if}
       <div
-        class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
+        class="grow pt-8 [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"
         class:overflow-y-scroll={!generating}
       >
         <div class="relative" class:pt-8={$inputMode === 'text'}>
