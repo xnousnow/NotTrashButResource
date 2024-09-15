@@ -7,7 +7,7 @@
   import Description from '~icons/material-symbols/Description'
   import PhotoCamera from '~icons/material-symbols/PhotoCamera'
   import Refresh from '~icons/material-symbols/Refresh'
-  import ThumbDown from '~icons/material-symbols/ThumbDown'
+  import SearchOff from '~icons/material-symbols/SearchOff'
   import ViewInArOff from '~icons/material-symbols/ViewInArOff'
 
   import SmallButton from '$components/SmallButton.svelte'
@@ -34,8 +34,8 @@
     <BrokenImage class="mx-auto h-16 w-16" />
     <p>물건을 인식할 수 없어요.<br />물건이 잘 보이도록 다시 찍어주세요.</p>
   {:else if error.errors?.unrelated}
-    <ThumbDown class="mx-auto h-16 w-16" />
-    <p>관련 없어요.<br />분리배출할 물건만 입력해주세요.</p>
+    <SearchOff class="mx-auto h-16 w-16" />
+    <p>분리배출할 물건을<br />정확히 입력해주세요.</p>
   {:else if error.errors?.other}
     <CloudOff class="mx-auto h-16 w-16" />
     <p>기타 오류가 발생했어요.<br />나중에 다시 시도해보세요.</p>
