@@ -77,6 +77,37 @@ export const POST: RequestHandler = async ({ request }) => {
       return new Response(JSON.stringify(errorResponse))
     }
 
+    const allNoMatch = categorizationResult.every(
+      (result) => 'error' in result && result.errors.noMatch
+    )
+    const allErrors = categorizationResult.every((result) => 'error' in result)
+
+    if (allNoMatch) {
+      const errorResponse: ErrorResponse = {
+        type: 'error',
+        data: {
+          error: true,
+          errors: {
+            noMatches: true
+          }
+        }
+      }
+      return new Response(JSON.stringify(errorResponse))
+    }
+
+    if (allErrors) {
+      const errorResponse: ErrorResponse = {
+        type: 'error',
+        data: {
+          error: true,
+          errors: {
+            other: true
+          }
+        }
+      }
+      return new Response(JSON.stringify(errorResponse))
+    }
+
     const guideStartTime = Date.now()
     const guideQueries = categorizationResult
       .filter(
@@ -118,7 +149,10 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(JSON.stringify(response))
   } catch (error) {
     console.error(`✧ #${index} Error occurred:`, error)
-    const errorResponse: ErrorResponse = { type: 'error', data: { error: true, errors: { other: true } } }
+    const errorResponse: ErrorResponse = {
+      type: 'error',
+      data: { error: true, errors: { other: true } }
+    }
     return new Response(JSON.stringify(errorResponse))
   } finally {
     console.log(`✧ #${index} Timings:`)
