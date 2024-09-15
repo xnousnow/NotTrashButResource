@@ -82,41 +82,43 @@
 </script>
 
 <div class="absolute left-0 top-0 h-full w-full" transition:blur={{ duration: 300 }}>
-  {#if generating}
+  {#if generating && $inputMode === 'image'}
     <div
       class="absolute left-0 top-0 flex h-full w-full overflow-hidden"
       transition:fly={{ y: 30, duration: 300 }}
     >
-      {#if $input && $inputMode === 'image'}
-        <img
-          src={inputUrl}
-          alt="Captured"
-          class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
-        />
-        <ParticleEffect />
-        {#if objects.length}
-          <ul
-            class="absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center text-3xl font-bold opacity-50"
-            transition:blur={{ duration: 300 }}
-          >
-            {#each objects as object, i}
-              <li
-                class="animate-pulse duration-500 ease-out"
-                in:fly|global={{ y: 30, duration: 500, delay: i * 75, easing: backOut }}
-              >
-                {object}
-              </li>
-            {/each}
-          </ul>
-        {:else if generating}
-          <div
-            class="absolute left-0 top-0 flex h-full w-full items-center justify-center opacity-50"
-            out:fly={{ y: -30, duration: 300 }}
-          >
-            <AutoAwesome class="h-16 w-16 animate-pulse" />
-          </div>
-        {/if}
+      <img
+        src={inputUrl}
+        alt="Captured"
+        class="h-full w-full scale-110 object-cover opacity-70 blur-lg"
+      />
+      <ParticleEffect />
+      {#if objects.length}
+        <ul
+          class="absolute left-0 top-0 flex h-full w-full flex-col items-center justify-center text-3xl font-bold opacity-50"
+          transition:blur={{ duration: 300 }}
+        >
+          {#each objects as object, i}
+            <li
+              class="animate-pulse duration-500 ease-out"
+              in:fly|global={{ y: 30, duration: 500, delay: i * 75, easing: backOut }}
+            >
+              {object}
+            </li>
+          {/each}
+        </ul>
+      {:else if generating}
+        <div
+          class="absolute left-0 top-0 flex h-full w-full items-center justify-center opacity-50"
+          out:fly={{ y: -30, duration: 300 }}
+        >
+          <AutoAwesome class="h-16 w-16 animate-pulse" />
+        </div>
       {/if}
+    </div>
+  {:else if generating && $inputMode === 'text'}
+    <div class="flex h-full w-full items-center justify-center" transition:blur={{ duration: 300 }}>
+      <div class="h-8 w-8 animate-ping rounded-full bg-white"></div>
     </div>
   {:else}
     <div
