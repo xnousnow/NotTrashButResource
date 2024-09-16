@@ -6,6 +6,7 @@
 
   import ArrowBack from '~icons/material-symbols/ArrowBack'
   import AutoAwesome from '~icons/material-symbols/AutoAwesome'
+  import ProgressActivity from '~icons/material-symbols/ProgressActivity'
 
   import ErrorDisplay from '$components/ErrorDisplay.svelte'
   import ParticleEffect from '$components/ParticleEffect.svelte'
@@ -123,8 +124,8 @@
       {/if}
     </div>
   {:else if generating && $inputMode === 'text'}
-    <div class="flex h-full w-full items-center justify-center" transition:blur={{ duration: 300 }}>
-      <div class="h-8 w-8 animate-ping rounded-full bg-white"></div>
+    <div class="flex h-64 w-full items-center justify-center" transition:blur={{ duration: 300 }}>
+      <ProgressActivity class="h-8 w-8 animate-spin text-white/50" />
     </div>
   {:else}
     <div
