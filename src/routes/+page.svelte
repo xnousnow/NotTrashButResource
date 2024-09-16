@@ -128,6 +128,12 @@
             class="h-full w-full resize-none bg-transparent text-4xl font-medium placeholder:text-white/60 focus:outline-none"
             placeholder={'분리배출할 물건을\n입력해주세요'}
             bind:value={textInput}
+            on:keydown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                capture()
+              }
+            }}
           ></textarea>
         </div>
       {/if}
