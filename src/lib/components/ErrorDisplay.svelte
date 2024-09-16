@@ -5,13 +5,14 @@
   import BrokenImage from '~icons/material-symbols/BrokenImage'
   import CloudOff from '~icons/material-symbols/CloudOff'
   import Description from '~icons/material-symbols/Description'
+  import Keyboard from '~icons/material-symbols/Keyboard'
   import PhotoCamera from '~icons/material-symbols/PhotoCamera'
   import Refresh from '~icons/material-symbols/Refresh'
   import SearchOff from '~icons/material-symbols/SearchOff'
   import ViewInArOff from '~icons/material-symbols/ViewInArOff'
 
   import SmallButton from '$components/SmallButton.svelte'
-  
+
   import { inputMode } from '$lib/stores'
 
   import type { ErrorResponseData as ImageErrorResponseData } from '$api/guide/types'
@@ -51,7 +52,7 @@
   {/if}
   <div class="flex gap-1.5">
     <SmallButton
-      Icon={PhotoCamera}
+      Icon={$inputMode === 'image' ? PhotoCamera : Keyboard}
       action={() => {
         goto('/')
       }}
