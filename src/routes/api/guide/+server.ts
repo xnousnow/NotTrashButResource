@@ -22,7 +22,7 @@ import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$l
 
 // const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
-const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
+const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
 
 let requestIndex = 0
 

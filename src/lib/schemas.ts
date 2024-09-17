@@ -40,20 +40,25 @@ export const imageIdentificationResponseSchema = z.object({
   ])
 })
 
-export const eachCategorizationResponseSchema = z.union([
-  z.object({
-    name: z.string().describe('물건의 이름'),
-    category: z.array(z.string()).describe('알맞는 카테고리(들)')
-  }),
-  z.object({
-    name: z.string().describe('물건의 이름'),
-    error: z.literal(true),
-    errors: z.object({
-      noMatch: z.boolean().describe('물건에 알맞는 카테고리가 없음'),
-      other: z.boolean().describe('기타 오류')
-    })
-  })
-])
+export const categorizationResponseSchema = z.object({
+  thought: z.string().describe('카테고리를 맞추기 위한 이유 및 과정'),
+  result: z.array(
+    z.union([
+      z.object({
+        name: z.string().describe('물건의 이름'),
+        category: z.array(z.string()).describe('알맞는 카테고리(들)')
+      }),
+      z.object({
+        name: z.string().describe('물건의 이름'),
+        error: z.literal(true),
+        errors: z.object({
+          noMatch: z.boolean().describe('물건에 알맞는 카테고리가 없음'),
+          other: z.boolean().describe('기타 오류')
+        })
+      })
+    ])
+  )
+})
 
 export const singleGuideResponseSchema = z.union([
   z.object({

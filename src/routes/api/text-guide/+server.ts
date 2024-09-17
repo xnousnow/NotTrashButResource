@@ -5,23 +5,22 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 
 import { categorizationMessages } from '$lib/prompts'
-import { eachCategorizationResponseSchema } from '$lib/schemas'
+import { categorizationResponseSchema } from '$lib/schemas'
 
 import type { RequestHandler } from './$types'
 import type { ErrorResponse, GuideResponse, ObjectError, ResultObject } from './types'
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
-const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY ?? '')
+const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
 
 let requestIndex = 0
 
 const categorizeObject = async (object: string, categories: string[]) =>
   generateObject({
-    model: openai('gpt-4o-mini'),
-    output: 'array',
-    schema: eachCategorizationResponseSchema,
+    model: openai('gpt-4o'),
+    schema: categorizationResponseSchema,
     messages: categorizationMessages(object, categories)
-  }).then((result) => result.object)
+  }).then((result) => result.object.result)
 
 const fetchGuides = async (queries: string[]) =>
   supabase

@@ -45,28 +45,34 @@ export const categorizationMessages = (object: string, categories: string[]): Co
   },
   {
     role: 'user',
-    content: '투명페트병'
+    content: '바나나맛우유'
   },
   {
     role: 'assistant',
-    content: '[ { "name": "투명 페트병", "category": "페트병" } ]'
+    content: dedent`
+      {
+        "thought": "바나나맛 우유는 보통 플라스틱 병에 담겨 있습니다. 따라서 '플라스틱 용기' 카테고리에 해당합니다.",
+        "result": [
+          { "name": "바나나맛 우유", "category": ["플라스틱 용기"] }
+        ]
+      }
+    `
   },
   {
     role: 'user',
-    content: '아이폰'
+    content: '폰이랑 집 분리배출 방법'
   },
   {
     role: 'assistant',
-    content: '[ { "name": "아이폰", "category": "휴대폰" } ]'
-  },
-  {
-    role: 'user',
-    content: '타이어랑 과자봉지'
-  },
-  {
-    role: 'assistant',
-    content:
-      '[ { "name": "타이어", "error": true, "errors": { "noMatch": true, "other": false } }, { "name": "과자 봉지", "category": "비닐" } ]'
+    content: dedent`
+      {
+        "thought": "폰은 보통 휴대폰을 의미하기 때문에 '휴대폰' 카테고리에 해당합니다. 하지만 집은 알맞는 카테고리가 없습니다.",
+        "result": [
+          { "name": "폰", "category": ["휴대폰"] },
+          { "name": "집", "error": true, "errors": { "noMatch": true, "other": false } }
+        ]
+      }
+    `
   },
   {
     role: 'user',
