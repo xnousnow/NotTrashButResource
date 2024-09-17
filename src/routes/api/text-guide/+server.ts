@@ -55,6 +55,26 @@ export const POST: RequestHandler = async ({ request }) => {
       `✧ #${index} Fetched categories: ${categories.slice(0, 5).join(', ')}... (${categories.length})`
     )
 
+    if (categories.includes(object)) {
+      const guideStartTime = Date.now()
+      const guide = await fetchGuides([object])
+      timings.push({ step: 'Fetching guide', duration: Date.now() - guideStartTime })
+      console.log(`✧ #${index} Fetched guide: ${JSON.stringify(guide)}`)
+      
+      const editedGuide = guide.map((item) => ({
+        ...item,
+        reference: [object]
+      }))
+
+      const response: GuideResponse = {
+        type: 'guide',
+        data: {
+          guide: editedGuide
+        }
+      }
+      return new Response(JSON.stringify(response))
+    }
+
     const identificationStartTime = Date.now()
     const categorizationResult = await categorizeObject(object, categories)
     timings.push({
