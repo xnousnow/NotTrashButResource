@@ -31,7 +31,7 @@ export const useAPI = async (
   close: () => void
 ) => {
   try {
-    const processedImage = await processImage(image, 200, 200)
+    const processedImage = await processImage(image, 512, 512)
 
     const response = await fetch('/api/guide', {
       method: 'POST',
