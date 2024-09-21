@@ -6,6 +6,8 @@
   import Refresh from '~icons/material-symbols/Refresh'
 
   import SmallButton from '$components/SmallButton.svelte'
+  
+  import { inputMode } from '$lib/stores'
 
   import type { ResultObject } from '$api/guide/types'
 
@@ -60,6 +62,10 @@
     class="fixed bottom-0 left-0 flex w-screen justify-center pb-10 pt-3 backdrop-blur"
     in:fly|global={{ y: 30, duration: 500 }}
   >
-    <SmallButton Icon={Refresh} text="다른 답변 받기" action={regenerate} />
+    <SmallButton
+      Icon={Refresh}
+      text={$inputMode === 'image' ? '다른 답변 받기' : '다시 시도하기'}
+      action={regenerate}
+    />
   </div>
 </div>
