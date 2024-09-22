@@ -4,8 +4,11 @@
   import { quintOut } from 'svelte/easing'
   import { blur, fly } from 'svelte/transition'
 
+  import autosize from 'svelte-autosize'
+
   import Apartment from '~icons/material-symbols/Apartment'
   import House from '~icons/material-symbols/House'
+  import Search from '~icons/material-symbols/Search'
 
   import CaptureMenu from '$components/CaptureMenu.svelte'
 
@@ -15,6 +18,9 @@
   let imageFile: File
 
   let textInput = ''
+
+  let autocomplete: string[]
+  $: suggestions = autocomplete?.filter((item) => item.includes(textInput))
 
   const initializeCamera = async () => {
     navigator.mediaDevices
@@ -27,17 +33,26 @@
       })
   }
 
-  onMount(() => {
+  onMount(async function () {
     inputMode.subscribe((value) => {
       if (value === 'image') {
         initializeCamera()
         inputStore.set(textInput)
       }
     })
+
+    autocomplete = await fetch('/api/get-names', { method: 'POST' }).then((res) => res.json())
   })
 
   function focusOnElement(node: HTMLElement) {
     node.focus()
+  }
+  
+  const handleKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      capture()
+    }
   }
 
   const upload = (event: Event) => {
@@ -123,18 +138,33 @@
           in:fly={{ y: 30, duration: 300, easing: quintOut, delay: 80 }}
           out:fly={{ y: 30, duration: 300, easing: quintOut }}
         >
-          <textarea
-            use:focusOnElement
-            class="h-full w-full resize-none bg-transparent text-4xl font-medium placeholder:text-white/60 focus:outline-none"
-            placeholder={'분리배출할 물건을\n입력해주세요'}
-            bind:value={textInput}
-            on:keydown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                capture()
-              }
-            }}
-          ></textarea>
+          <label class="block h-full cursor-text">
+            <textarea
+              use:focusOnElement
+              use:autosize
+              class="w-full resize-none bg-transparent text-4xl font-medium placeholder:text-white/60 focus:outline-none"
+              placeholder={'분리배출할 물건을\n입력해주세요'}
+              bind:value={textInput}
+              on:keydown={handleKeydown}
+            ></textarea>
+            {#if textInput.length > 0}
+              <div class="flex flex-wrap gap-2">
+                {#each suggestions as suggestion}
+                  <button
+                    class="flex shrink-0 items-center gap-1 rounded-xl bg-white/20 px-2 py-1 text-xl"
+                    transition:blur|global={{ duration: 200, delay: 200 }}
+                    on:click={() => {
+                      textInput = suggestion
+                      capture()
+                    }}
+                  >
+                    <Search class="h-5 w-5" />
+                    {suggestion}
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </label>
         </div>
       {/if}
     </div>
