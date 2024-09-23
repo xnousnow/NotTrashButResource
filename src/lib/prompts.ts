@@ -2,7 +2,7 @@ import type { CoreMessage } from 'ai'
 import dedent from 'dedent'
 import type { RetrievedGuide, MatchedIdentifiedObject } from '../routes/api/guide/types'
 
-export const identificationMessages = (image: string, categories: string[]): CoreMessage[] => {
+export const imageIdentificationMessages = (image: string, categories: string[]): CoreMessage[] => {
   return [
     {
       role: 'system',
@@ -31,6 +31,60 @@ export const identificationMessages = (image: string, categories: string[]): Cor
     }
   ]
 }
+
+export const categorizationMessages = (object: string, categories: string[]): CoreMessage[] => [
+  {
+    role: 'system',
+    content: dedent`
+      사용자가 물건을 올바르게 분리배출하기 위해 가장 적절한 분리배출 카테고리를 선택하세요. 예를 들어, 찌그러진 페트병은 페트병, 과자 봉지는 비닐로 분류할 수 있습니다.
+
+      물건의 주요 구성 재질 등을 고려해 가장 적절한 분리배출 방법을 가지고 있을 카테고리를 선택하세요.
+      만약 알맞은 카테고리가 없다면 알맞은 오류를 선택하세요.
+      사용자의 입력이 적절하지 않거나 분리배출할 물건이 아닌 경우, 빈 배열로 답변하세요.
+
+      LED, 형광등인지 알 수 없는 전등과 같이, 정확한 카테고리를 알 수 없는 물건은 여러 개를 선택하세요.
+
+      카테고리: ${categories.join(', ')}
+
+      **한국어로 답변하세요.**
+    `
+  },
+  {
+    role: 'user',
+    content: '바나나맛우유'
+  },
+  {
+    role: 'assistant',
+    content: dedent`
+      {
+        "thought": "바나나맛 우유는 보통 플라스틱 병에 담겨 있습니다. 따라서 '플라스틱 용기' 카테고리에 해당합니다.",
+        "result": [
+          { "name": "바나나맛 우유", "category": ["플라스틱 용기"] }
+        ]
+      }
+    `
+  },
+  {
+    role: 'user',
+    content: '폰이랑 집 분리배출 방법'
+  },
+  {
+    role: 'assistant',
+    content: dedent`
+      {
+        "thought": "폰은 보통 휴대폰을 의미하기 때문에 '휴대폰' 카테고리에 해당합니다. 하지만 집은 알맞는 카테고리가 없습니다.",
+        "result": [
+          { "name": "폰", "category": ["휴대폰"] },
+          { "name": "집", "error": true, "errors": { "noMatch": true, "other": false } }
+        ]
+      }
+    `
+  },
+  {
+    role: 'user',
+    content: object
+  }
+]
 
 export const guideMessages = (
   description: string,

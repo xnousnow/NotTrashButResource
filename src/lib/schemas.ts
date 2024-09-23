@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const identificationResponseSchema = z.object({
+export const imageIdentificationResponseSchema = z.object({
   description: z
     .string()
     .describe(
@@ -31,11 +31,33 @@ export const identificationResponseSchema = z.object({
       error: z.literal(true),
       errors: z.object({
         noObjects: z.boolean().describe('이미지에 물건이 없음'),
-        imageError: z.boolean().describe('이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음, 또는 이미지 오류'),
+        imageError: z
+          .boolean()
+          .describe('이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음, 또는 이미지 오류'),
         other: z.boolean().describe('기타 이미지 오류')
       })
     })
   ])
+})
+
+export const categorizationResponseSchema = z.object({
+  thought: z.string().describe('카테고리를 맞추기 위한 이유 및 과정'),
+  result: z.array(
+    z.union([
+      z.object({
+        name: z.string().describe('물건의 이름'),
+        category: z.array(z.string()).describe('알맞는 카테고리(들)')
+      }),
+      z.object({
+        name: z.string().describe('물건의 이름'),
+        error: z.literal(true),
+        errors: z.object({
+          noMatch: z.boolean().describe('물건에 알맞는 카테고리가 없음'),
+          other: z.boolean().describe('기타 오류')
+        })
+      })
+    ])
+  )
 })
 
 export const singleGuideResponseSchema = z.union([

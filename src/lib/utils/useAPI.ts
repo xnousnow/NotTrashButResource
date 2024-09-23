@@ -1,5 +1,6 @@
-import type { ObjectResponseData, GuideResponseData, ErrorResponseData } from '$api/guide/types'
 import { processImage } from '$utils/processImage'
+
+import type { ObjectResponseData, GuideResponseData, ErrorResponseData } from '$api/guide/types'
 
 const findJsonObjects = (str: string): string[] => {
   const objects: string[] = []
@@ -22,68 +23,108 @@ const findJsonObjects = (str: string): string[] => {
   return objects
 }
 
-export const useAPI = async (
-  image: File,
-  isApartment: boolean,
-  handleObjects: (objects: ObjectResponseData) => void,
-  handleGuides: (guides: GuideResponseData) => void,
+export const useAPI = {
+  image: async (
+    image: File,
+    isApartment: boolean,
+    handleObjects: (objects: ObjectResponseData['objects']) => void,
+    handleGuides: (guides: GuideResponseData['guide']) => void,
+    handleError: (error: ErrorResponseData) => void,
+    close: () => void
+  ) => {
+    try {
+      const processedImage = await processImage(image, 200, 200)
+
+      const response = await fetch('/api/guide', {
+        method: 'POST',
+        body: JSON.stringify({ image: processedImage, isApartment }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      await handleStreamResponse(response, handleObjects, handleGuides, handleError, close)
+    } catch (error) {
+      console.error(error)
+      handleError({ error: true, errors: { other: true } })
+    }
+  },
+
+  text: async (
+    object: string,
+    handleGuides: (guides: GuideResponseData['guide']) => void,
+    handleError: (error: ErrorResponseData) => void
+  ) => {
+    try {
+      const response = await fetch('/api/text-guide', {
+        method: 'POST',
+        body: JSON.stringify({ object }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      const { type, data } = await response.json()
+
+      switch (type) {
+        case 'guide':
+          handleGuides(data.guide)
+          break
+        case 'error':
+          handleError(data)
+          break
+      }
+    } catch (error) {
+      console.error(error)
+      handleError({ error: true, errors: { other: true } })
+    }
+  }
+}
+
+const handleStreamResponse = async (
+  response: Response,
+  handleObjects: (objects: ObjectResponseData['objects']) => void,
+  handleGuides: (guides: GuideResponseData['guide']) => void,
   handleError: (error: ErrorResponseData) => void,
   close: () => void
 ) => {
-  try {
-    const processedImage = await processImage(image, 512, 512)
-
-    const response = await fetch('/api/guide', {
-      method: 'POST',
-      body: JSON.stringify({ image: processedImage, isApartment }),
-      headers: { 'Content-Type': 'application/json' }
-    })
-
-    const reader = response.body?.getReader()
-    if (!reader) {
-      handleError({ error: true, errors: { other: true } })
-      return
-    }
-
-    const decoder = new TextDecoder()
-    let buffer = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) {
-        close()
-        break
-      }
-
-      buffer += decoder.decode(value, { stream: true })
-
-      const jsonObjects = findJsonObjects(buffer)
-
-      for (const jsonString of jsonObjects) {
-        try {
-          const { type, data } = JSON.parse(jsonString)
-
-          switch (type) {
-            case 'objects':
-              handleObjects(data)
-              break
-            case 'guide':
-              handleGuides(data)
-              break
-            case 'error':
-              handleError(data)
-              break
-          }
-
-          const endIndex = buffer.indexOf(jsonString) + jsonString.length
-          buffer = buffer.slice(endIndex)
-        } catch (error) {
-          console.error('Error parsing JSON:', error)
-        }
-      }
-    }
-  } catch (error) {
-    console.error(error)
+  const reader = response.body?.getReader()
+  if (!reader) {
     handleError({ error: true, errors: { other: true } })
+    return
+  }
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) {
+      close()
+      break
+    }
+
+    buffer += decoder.decode(value, { stream: true })
+
+    const jsonObjects = findJsonObjects(buffer)
+
+    for (const jsonString of jsonObjects) {
+      try {
+        const { type, data } = JSON.parse(jsonString)
+
+        switch (type) {
+          case 'objects':
+            handleObjects(data.objects)
+            break
+          case 'guide':
+            handleGuides(data.guide)
+            break
+          case 'error':
+            handleError(data)
+            break
+        }
+
+        const endIndex = buffer.indexOf(jsonString) + jsonString.length
+        buffer = buffer.slice(endIndex)
+      } catch (error) {
+        console.error('Error parsing JSON:', error)
+      }
+    }
   }
 }
