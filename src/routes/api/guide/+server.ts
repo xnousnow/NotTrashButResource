@@ -57,7 +57,7 @@ const generateGuide = async (
   generateObject({
     model: openai('gpt-4o-mini'),
     output: 'array',
-    schema: singleGuideResponseSchema,
+    schema: singleGuideResponseSchema(sourceGuides.map(({ name }) => name) as [string, ...string[]]),
     messages: guideMessages(
       description ?? '',
       identifiedObjects as MatchedIdentifiedObject[],
