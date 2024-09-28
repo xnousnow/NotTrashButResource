@@ -1,6 +1,7 @@
-import type { CoreMessage } from 'ai'
 import dedent from 'dedent'
-import type { RetrievedGuide, MatchedIdentifiedObject } from '../routes/api/guide/types'
+
+import type { CoreMessage } from 'ai'
+import type { RetrievedGuide, MatchedIdentifiedObject } from '$api/guide/types'
 
 export const imageIdentificationMessages = (image: string, categories: string[]): CoreMessage[] => {
   return [

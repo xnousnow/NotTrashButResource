@@ -47,7 +47,7 @@
   function focusOnElement(node: HTMLElement) {
     node.focus()
   }
-  
+
   const handleKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()

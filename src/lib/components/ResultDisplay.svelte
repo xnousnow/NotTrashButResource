@@ -6,7 +6,7 @@
   import Refresh from '~icons/material-symbols/Refresh'
 
   import SmallButton from '$components/SmallButton.svelte'
-  
+
   import { inputMode } from '$lib/stores'
 
   import type { ResultObject } from '$api/guide/types'

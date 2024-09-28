@@ -1,3 +1,4 @@
+import { json } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 
 import { createClient } from '@supabase/supabase-js'
@@ -60,7 +61,7 @@ export const POST: RequestHandler = async ({ request }) => {
       const guide = await fetchGuides([object])
       timings.push({ step: 'Fetching guide', duration: Date.now() - guideStartTime })
       console.log(`✧ #${index} Fetched guide: ${JSON.stringify(guide)}`)
-      
+
       const editedGuide = guide.map((item) => ({
         ...item,
         reference: [object]
@@ -72,7 +73,7 @@ export const POST: RequestHandler = async ({ request }) => {
           guide: editedGuide
         }
       }
-      return new Response(JSON.stringify(response))
+      return json(response)
     }
 
     const identificationStartTime = Date.now()
@@ -93,7 +94,7 @@ export const POST: RequestHandler = async ({ request }) => {
           }
         }
       }
-      return new Response(JSON.stringify(errorResponse))
+      return json(errorResponse)
     }
 
     const allNoMatch = categorizationResult.every(
@@ -111,7 +112,7 @@ export const POST: RequestHandler = async ({ request }) => {
           }
         }
       }
-      return new Response(JSON.stringify(errorResponse))
+      return json(errorResponse)
     }
 
     if (allErrors) {
@@ -124,7 +125,7 @@ export const POST: RequestHandler = async ({ request }) => {
           }
         }
       }
-      return new Response(JSON.stringify(errorResponse))
+      return json(errorResponse)
     }
 
     const guideStartTime = Date.now()
@@ -165,14 +166,14 @@ export const POST: RequestHandler = async ({ request }) => {
       type: 'guide',
       data: { guide: guides }
     }
-    return new Response(JSON.stringify(response))
+    return json(response)
   } catch (error) {
     console.error(`✧ #${index} Error occurred:`, error)
     const errorResponse: ErrorResponse = {
       type: 'error',
       data: { error: true, errors: { other: true } }
     }
-    return new Response(JSON.stringify(errorResponse))
+    return json(errorResponse)
   } finally {
     console.log(`✧ #${index} Timings:`)
     timings.forEach(({ step, duration }) => {
