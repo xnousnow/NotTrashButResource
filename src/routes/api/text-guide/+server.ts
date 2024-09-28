@@ -61,7 +61,7 @@ export const POST: RequestHandler = async ({ request }) => {
       const guide = await fetchGuides([object])
       timings.push({ step: 'Fetching guide', duration: Date.now() - guideStartTime })
       console.log(`✧ #${index} Fetched guide: ${JSON.stringify(guide)}`)
-      
+
       const editedGuide = guide.map((item) => ({
         ...item,
         reference: [object]
