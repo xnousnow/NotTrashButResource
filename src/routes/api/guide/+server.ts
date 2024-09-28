@@ -29,7 +29,7 @@ let requestIndex = 0
 const identifyObjects = async (image: string, categories: string[]) =>
   generateObject({
     model: openai('gpt-4o-2024-08-06'),
-    schema: imageIdentificationResponseSchema,
+    schema: imageIdentificationResponseSchema(categories as [string, ...string[]]),
     messages: imageIdentificationMessages(image, categories)
   }).then((result) => result.object)
 

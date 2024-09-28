@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const imageIdentificationResponseSchema = z.object({
+export const imageIdentificationResponseSchema = (categories: [string, ...string[]]) => z.object({
   description: z
     .string()
     .describe(
@@ -11,7 +11,7 @@ export const imageIdentificationResponseSchema = z.object({
       z.union([
         z.object({
           name: z.string().describe('물건의 이름'),
-          category: z.array(z.string()).describe('알맞는 카테고리(들)')
+          category: z.array(z.enum(categories)).describe('알맞는 카테고리(들)')
         }),
         z.object({
           name: z.string().describe('물건의 이름'),
@@ -40,13 +40,13 @@ export const imageIdentificationResponseSchema = z.object({
   ])
 })
 
-export const categorizationResponseSchema = z.object({
+export const categorizationResponseSchema = (categories: [string, ...string[]]) => z.object({
   thought: z.string().describe('카테고리를 맞추기 위한 이유 및 과정'),
   result: z.array(
     z.union([
       z.object({
         name: z.string().describe('물건의 이름'),
-        category: z.array(z.string()).describe('알맞는 카테고리(들)')
+        category: z.array(z.enum(categories)).describe('알맞는 카테고리(들)')
       }),
       z.object({
         name: z.string().describe('물건의 이름'),

@@ -18,7 +18,7 @@ let requestIndex = 0
 const categorizeObject = async (object: string, categories: string[]) =>
   generateObject({
     model: openai('gpt-4o'),
-    schema: categorizationResponseSchema,
+    schema: categorizationResponseSchema(categories as [string, ...string[]]),
     messages: categorizationMessages(object, categories)
   }).then((result) => result.object.result)
 
