@@ -82,7 +82,7 @@
   })
 </script>
 
-<div class="absolute left-0 top-0 h-full w-full" transition:blur={{ duration: 300 }}>
+<div class="absolute left-0 top-0 h-full w-full safearea" transition:blur={{ duration: 300 }}>
   {#if generating && $inputMode === 'image'}
     <div
       class="absolute left-0 top-0 flex h-full w-full overflow-hidden"
