@@ -126,7 +126,6 @@ export const POST: RequestHandler = async ({ request }) => {
           return
         }
 
-        // identified objects that has categories (length > 0 or not null)
         const identifiedObjectsWithCategories = identificationResult.result?.filter(
           (obj: object): obj is { name: string; category: string[] } =>
             'category' in obj && obj.category !== null
