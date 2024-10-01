@@ -19,10 +19,6 @@ export const imageIdentificationResponseSchema = (categories: [string, ...string
             error: z.literal(true),
             errors: z.object({
               noMatch: z.boolean().describe('물건에 알맞는 카테고리가 없음'),
-              notReal: z
-                .boolean()
-                .optional()
-                .describe('이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음'),
               other: z.boolean().describe('기타 오류')
             })
           })

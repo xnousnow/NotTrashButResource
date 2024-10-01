@@ -171,16 +171,21 @@ export const POST: RequestHandler = async ({ request }) => {
           `✧ #${index} Generated guides: ${JSON.stringify(generatedGuides)} (${generatedGuides.length})`
         )
 
-        if (generatedGuides.length === 0) {
+        const processedGuides: ResultObject[] = [
+          ...generatedGuides,
+          ...identificationResult.result
+            .filter((obj) => 'error' in obj && obj.error)
+            .map((obj) => obj as ObjectError)
+        ]
+
+        if (processedGuides.length === 0) {
           sendData(controller, 'error', { error: true, errors: { other: true } })
           console.log(`✧ #${index} No guides generated`)
-        } else if (
-          generatedGuides.every((guide): guide is ObjectError => 'error' in guide && guide.error)
-        ) {
+        } else if (processedGuides.every((guide): guide is ObjectError => 'error' in guide && guide.error)) {
           sendData(controller, 'error', { error: true, errors: { other: true } })
           console.log(`✧ #${index} All guides have errors`)
         } else {
-          sendData(controller, 'guide', { guide: generatedGuides })
+          sendData(controller, 'guide', { guide: processedGuides })
           console.log(`✧ #${index} Sent guides to client`)
         }
       } catch (error) {

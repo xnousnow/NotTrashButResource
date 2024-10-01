@@ -18,7 +18,6 @@ export interface UnmatchedIdentifiedObject extends IdentifiedObjectBase {
   error: true
   errors: {
     noMatch: true
-    notReal?: boolean
     other?: boolean
   }
 }
