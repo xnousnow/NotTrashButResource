@@ -9,6 +9,7 @@ import { generateObject } from 'ai'
 import type { RequestHandler } from './$types'
 
 import { imageIdentificationMessages, guideMessages } from '$lib/prompts'
+import { tupleToNumberedObject, numberedObjectToArray } from '$utils/zodTupleToNumberedObject'
 
 import type {
   ErrorResponseData,
@@ -16,7 +17,9 @@ import type {
   MatchedIdentifiedObject,
   ObjectResponseData,
   ResponseTypes,
-  RetrievedGuide
+  RetrievedGuide,
+  ObjectError,
+  ResultObject
 } from './types'
 import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 
@@ -53,18 +56,24 @@ const generateGuide = async (
   identifiedObjects: MatchedIdentifiedObject[],
   sourceGuides: RetrievedGuide[],
   isApartment: boolean
-) =>
+): Promise<ResultObject[]> =>
   generateObject({
     model: openai('gpt-4o-mini'),
-    output: 'array',
-    schema: singleGuideResponseSchema(sourceGuides.map(({ name }) => name) as [string, ...string[]]),
+    schema: tupleToNumberedObject(
+      identifiedObjects.map(({ name }) =>
+        singleGuideResponseSchema(
+          name,
+          sourceGuides.map(({ name }) => name) as [string, ...string[]]
+        )
+      )
+    ),
     messages: guideMessages(
       description ?? '',
       identifiedObjects as MatchedIdentifiedObject[],
       sourceGuides,
       isApartment
     )
-  }).then((result) => result.object)
+  }).then((result) => numberedObjectToArray(result.object) as ResultObject[])
 
 const sendData = (
   controller: ReadableStreamDefaultController,
@@ -164,14 +173,14 @@ export const POST: RequestHandler = async ({ request }) => {
         )
 
         if (generatedGuides.length === 0) {
-          sendData(controller, 'error', { error: true, errors: { other: true } })
-          console.log(`✧ #${index} No guides generated`)
-        } else if (generatedGuides.every((guide) => 'error' in guide && guide.error)) {
-          sendData(controller, 'error', { error: true, errors: { other: true } })
-          console.log(`✧ #${index} All guides have errors`)
+          sendData(controller, 'error', { error: true, errors: { other: true } });
+          console.log(`✧ #${index} No guides generated`);
+        } else if (generatedGuides.every((guide): guide is ObjectError => 'error' in guide && guide.error)) {
+          sendData(controller, 'error', { error: true, errors: { other: true } });
+          console.log(`✧ #${index} All guides have errors`);
         } else {
-          sendData(controller, 'guide', { guide: generatedGuides })
-          console.log(`✧ #${index} Sent guides to client`)
+          sendData(controller, 'guide', { guide: generatedGuides });
+          console.log(`✧ #${index} Sent guides to client`);
         }
       } catch (error) {
         sendData(controller, 'error', { error: true, errors: { other: true } })

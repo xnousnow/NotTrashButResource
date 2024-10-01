@@ -60,9 +60,9 @@ export const categorizationResponseSchema = (categories: [string, ...string[]]) 
   )
 })
 
-export const singleGuideResponseSchema = (availableReferences: [string, ...string[]]) => z.union([
+export const singleGuideResponseSchema = (name: string, availableReferences: [string, ...string[]]) => z.union([
   z.object({
-    name: z.string().describe('물건의 이름'),
+    name: z.literal(name).describe('물건의 이름'),
     guide: z.array(z.string()).describe('분리배출 방법'),
     tips: z.array(z.string()).optional().describe('분리배출 팁'),
     reference: z.array(z.enum(availableReferences)).describe('사용한 분리배출 정보의 이름')
