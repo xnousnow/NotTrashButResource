@@ -181,7 +181,9 @@ export const POST: RequestHandler = async ({ request }) => {
         if (processedGuides.length === 0) {
           sendData(controller, 'error', { error: true, errors: { other: true } })
           console.log(`✧ #${index} No guides generated`)
-        } else if (processedGuides.every((guide): guide is ObjectError => 'error' in guide && guide.error)) {
+        } else if (
+          processedGuides.every((guide): guide is ObjectError => 'error' in guide && guide.error)
+        ) {
           sendData(controller, 'error', { error: true, errors: { other: true } })
           console.log(`✧ #${index} All guides have errors`)
         } else {
