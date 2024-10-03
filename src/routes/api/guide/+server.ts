@@ -24,7 +24,7 @@ import type {
 import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 
 // const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
-const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
+const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '', compatibility: 'strict' })
 const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
 
 let requestIndex = 0

@@ -11,7 +11,7 @@ import { categorizationResponseSchema } from '$lib/schemas'
 import type { RequestHandler } from './$types'
 import type { ErrorResponse, GuideResponse, ObjectError, ResultObject } from './types'
 
-const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
+const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '', compatibility: 'strict' })
 const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
 
 let requestIndex = 0
