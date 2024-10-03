@@ -5,3 +5,7 @@
 html {
   @apply overflow-hidden bg-black text-white;
 }
+
+* {
+  @apply touch-pan-y;
+}

@@ -2,6 +2,7 @@
   import '../app.css'
 </script>
 
+<svelte:window on:touchmove={(e) => e.preventDefault()} />
 <div class="relative h-full w-full overflow-hidden">
   <slot />
 </div>
