@@ -5,24 +5,10 @@ export interface RetrievedGuide {
 }
 
 // 인식 결과 항목
-
-export interface IdentifiedObjectBase {
+export interface IdentifiedObject {
   name: string
+  category: string[] | null
 }
-
-export interface MatchedIdentifiedObject extends IdentifiedObjectBase {
-  category: string[]
-}
-
-export interface UnmatchedIdentifiedObject extends IdentifiedObjectBase {
-  error: true
-  errors: {
-    noMatch: true
-    other?: boolean
-  }
-}
-
-export type IdentifiedObject = MatchedIdentifiedObject | UnmatchedIdentifiedObject
 
 // 인식 결과
 export interface IdentificationResult {
@@ -32,20 +18,19 @@ export interface IdentificationResult {
 
 // 생성된 물건 분리배출 방법
 export interface ObjectGuide {
+  type: 'guide'
   name: string
   guide: string[]
-  tips?: string[]
+  tips: string[] | null
   reference: string[]
 }
 
-// 생성된 물건 오류
 export interface ObjectError {
+  type: 'error'
   name: string
-  error: true
   errors: {
-    noMatch?: boolean
-    noGuide?: boolean
-    other?: boolean
+    noGuide: boolean
+    other: boolean
   }
 }
 

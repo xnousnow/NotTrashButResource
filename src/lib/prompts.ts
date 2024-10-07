@@ -1,7 +1,7 @@
 import dedent from 'dedent'
 
 import type { CoreMessage } from 'ai'
-import type { RetrievedGuide, MatchedIdentifiedObject } from '$api/guide/types'
+import type { RetrievedGuide, IdentifiedObject } from '$api/guide/types'
 
 export const imageIdentificationMessages = (image: string, categories: string[]): CoreMessage[] => {
   return [
@@ -19,7 +19,7 @@ export const imageIdentificationMessages = (image: string, categories: string[])
           - 정확한 카테고리가 없어도, 가장 적절한 분리배출 방법을 가지고 있을 카테고리를 선택하세요.
           - LED, 형광등인지 알 수 없는 전등과 같이, 정확한 카테고리를 알 수 없는 물건은 여러 개를 선택하세요.
           - 물건의 이름은 간단하게, 색깔 등 없이 작성하세요. 예를 들어, '동그란 초록색 실리콘 냄비 받침' 대신 '실리콘 냄비 받침'으로 작성하세요.
-        3. 만약 아무 카테고리에도 속하지 않거나 다른 문제가 있다면, 답변에서 알맞은 오류를 선택하세요.
+        3. 만약 아무 카테고리에도 속하지 않거나 다른 문제가 있다면, 빈 배열로 답변하세요.
 
         **한국어로 답변하세요.**
       `
@@ -71,7 +71,7 @@ export const categorizationMessages = (object: string, categories: string[]): Co
         "thought": "폰은 보통 휴대폰을 의미하기 때문에 '휴대폰' 카테고리에 해당합니다. 하지만 집은 알맞는 카테고리가 없습니다.",
         "result": [
           { "name": "폰", "category": ["휴대폰"] },
-          { "name": "집", "error": true, "errors": { "noMatch": true, "other": false } }
+          { "name": "집", "category": [] }
         ]
       }
     `
@@ -84,7 +84,7 @@ export const categorizationMessages = (object: string, categories: string[]): Co
 
 export const guideMessages = (
   description: string,
-  objects: MatchedIdentifiedObject[],
+  objects: IdentifiedObject[],
   guides: RetrievedGuide[],
   isApartment: boolean
 ): CoreMessage[] => [
@@ -145,19 +145,20 @@ export const guideMessages = (
   {
     role: 'assistant',
     content: dedent`
-      {
-        "1": { "name": "페트병", "guide": ["페트병을 최대한 압축해요.", "뚜껑을 닫아 일반 플라스틱으로 배출해요."], "tips": ["페트병을 최대한 압축시켜 배출하면 운송/압축/보관 과정에 도움이 돼요.", "뚜껑은 파쇄하여 세척하는 과정에서 물에 떠서 투명페트와 분리되기 때문에 따로 모아 재활용 가능하므로 닫아서 버려요."], "reference": ["페트병"] },
-        "2": { "name": "전구", "guide": ["LED 등이어도 형광등 분리배출함에 배출해요."], "tips": ["정부는 2023년부터 LED 등도 생산자책임재활용(EPR) 제도에 포함시켰어요.", "LED용 분리배출함을 따로 마련하지 않고 형광등 분리배출함에 버리도록 하고 있어요.", "형광등에는 가스 형태의 수은이 들어있어 깨지면 가스를 접할 위험성이 있으니 절대 깨서 버리면 안돼요."], "reference": ["LED 등", "형광등"] }
-      }
+      [
+        { "type": "guide", "name": "페트병", "guide": ["페트병을 최대한 압축해요.", "뚜껑을 닫아 일반 플라스틱으로 배출해요."], "tips": ["페트병을 최대한 압축시켜 배출하면 운송/압축/보관 과정에 도움이 돼요.", "뚜껑은 파쇄하여 세척하는 과정에서 물에 떠서 투명페트와 분리되기 때문에 따로 모아 재활용 가능하므로 닫아서 버려요."], "reference": ["페트병"] },
+        { "type": "guide", "name": "전구", "guide": ["LED 등이어도 형광등 분리배출함에 배출해요."], "tips": ["정부는 2023년부터 LED 등도 생산자책임재활용(EPR) 제도에 포함시켰어요.", "LED용 분리배출함을 따로 마련하지 않고 형광등 분리배출함에 버리도록 하고 있어요.", "형광등에는 가스 형태의 수은이 들어있어 깨지면 가스를 접할 위험성이 있으니 절대 깨서 버리면 안돼요."], "reference": ["LED 등", "형광등"] }
+      ]
     `
   },
   {
     role: 'user',
     content: dedent`
-      이미지 설명: 이미지에는 작은 인형과 장난감들이 보입니다.
+      이미지 설명: 이미지에는 작은 인형과 장난감, 집이 보입니다.
       인식된 물건:
       - 인형: 인형/천/솜
       - 장난감: 플라스틱 장난감
+      - 집: 카테고리 없음
       주거 환경: 아파트
 
       # 인형/천/솜
@@ -173,10 +174,11 @@ export const guideMessages = (
   {
     role: 'assistant',
     content: dedent`
-      {
-        "1": { "name": "인형", "guide": ["일반쓰레기로 배출해요."], "tips": ["인형, 천, 솜 등은 재활용이 불가한 섬유 재질이에요.", "만약 종량제 봉투에 담기 힘들만큼 크다면 가위로 자르거나 대형생활폐기물로 신고해 배출해요."], "reference": ["인형/천/솜"] },
-        "2": { "name": "장난감", "guide": ["일반쓰레기로 배출해요."], "reference": ["플라스틱 장난감"] }
-      }
+      [
+        { "type": "guide", "name": "인형", "guide": ["일반쓰레기로 배출해요."], "tips": ["인형, 천, 솜 등은 재활용이 불가한 섬유 재질이에요.", "만약 종량제 봉투에 담기 힘들만큼 크다면 가위로 자르거나 대형생활폐기물로 신고해 배출해요."], "reference": ["인형/천/솜"] },
+        { "type": "guide", "name": "장난감", "guide": ["일반쓰레기로 배출해요."], "reference": ["플라스틱 장난감"] },
+        { "type": "error", "name": "집", "errors": { "noGuide": true } }
+      ]
     `
   },
   {
@@ -198,9 +200,9 @@ export const guideMessages = (
   {
     role: 'assistant',
     content: dedent`
-      {
-        "1": { "name": "소형 선풍기", "guide": ["제품이 쓸만하면 중고품으로 재사용되도록 팔거나 지역별 재활용센터로 보내요. 상태와 사용 기간에 따라 돈을 받거나 무상으로 넘길 수 있어요.", "재사용이 어려운 경우 새 제품을 살때 기존 제품을 회수 요청해요. 생산자의 무상방문수거 서비스를 이용해요.", "크다면 대형 쓰레기로 배출 신고를 하고 수수료를 지불할 수 있어요."], "reference": ["소형 가전제품"] }
-      }
+      [
+        { "type": "guide", "name": "소형 선풍기", "guide": ["제품이 쓸만하면 중고품으로 재사용되도록 팔거나 지역별 재활용센터로 보내요. 상태와 사용 기간에 따라 돈을 받거나 무상으로 넘길 수 있어요.", "재사용이 어려운 경우 새 제품을 살때 기존 제품을 회수 요청해요. 생산자의 무상방문수거 서비스를 이용해요.", "크다면 대형 쓰레기로 배출 신고를 하고 수수료를 지불할 수 있어요."], "reference": ["소형 가전제품"] }
+      ]
     `
   },
   {
@@ -208,7 +210,7 @@ export const guideMessages = (
     content: dedent`
       이미지 설명: ${description}
       인식된 물건:
-      ${objects.map((object) => `- ${object.name}: ${object.category.length ? object.category.join(', ') : '카테고리 없음'}`).join('\n')}
+      ${objects.map((object) => `- ${object.name}: ${object.category?.length ? object.category.join(', ') : '카테고리 없음'}`).join('\n')}
       주거 환경: ${isApartment ? '아파트' : '주택'}
 
       ${guides

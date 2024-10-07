@@ -9,7 +9,7 @@ import { categorizationMessages } from '$lib/prompts'
 import { categorizationResponseSchema } from '$lib/schemas'
 
 import type { RequestHandler } from './$types'
-import type { ErrorResponse, GuideResponse, ObjectError, ResultObject } from './types'
+import type { ErrorResponse, GuideResponse, ResultObject } from './types'
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '', compatibility: 'strict' })
 const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
@@ -18,10 +18,14 @@ let requestIndex = 0
 
 const categorizeObject = async (object: string, categories: string[]) =>
   generateObject({
-    model: openai('gpt-4o'),
+    model: openai('gpt-4o', {
+      structuredOutputs: true
+    }),
+    schemaName: 'categorization',
+    schemaDescription: '올바른 분리배출을 위해 물건을 알맞는 카테고리로 분류합니다.',
     schema: categorizationResponseSchema(categories as [string, ...string[]]),
     messages: categorizationMessages(object, categories)
-  }).then((result) => result.object.result)
+  }).then((result) => result.object)
 
 const fetchGuides = async (queries: string[]) =>
   supabase
@@ -77,7 +81,10 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     const identificationStartTime = Date.now()
-    const categorizationResult = await categorizeObject(object, categories)
+    const categorizationResult = await categorizeObject(object, categories).then((result) => {
+      console.log(JSON.stringify(result))
+      return result.result
+    })
     timings.push({
       step: 'Identifying objects',
       duration: Date.now() - identificationStartTime
@@ -97,9 +104,7 @@ export const POST: RequestHandler = async ({ request }) => {
       return json(errorResponse)
     }
 
-    const allNoMatch = categorizationResult.every(
-      (result) => 'error' in result && result.errors.noMatch
-    )
+    const allNoMatch = categorizationResult.every((result) => result.category?.length === 0)
     const allErrors = categorizationResult.every((result) => 'error' in result)
 
     if (allNoMatch) {
@@ -146,7 +151,7 @@ export const POST: RequestHandler = async ({ request }) => {
     )
 
     const guides: ResultObject[] = categorizationResult.flatMap((result): ResultObject[] => {
-      if ('category' in result && result.category !== null) {
+      if (result.category.length !== 0) {
         return result.category.map((categoryName) => {
           const matchingGuide = retrievedGuides.find((guide) => guide.name === categoryName)
           return {
@@ -158,7 +163,7 @@ export const POST: RequestHandler = async ({ request }) => {
           }
         })
       } else {
-        return [result as ObjectError]
+        return []
       }
     })
 

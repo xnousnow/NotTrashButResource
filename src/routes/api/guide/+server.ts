@@ -1,29 +1,27 @@
+// recycle/src/routes/api/guide/+server.ts
+
 import { env } from '$env/dynamic/private'
 
 import { createClient } from '@supabase/supabase-js'
 
 import { createOpenAI } from '@ai-sdk/openai'
-// import { createAnthropic } from '@ai-sdk/anthropic'
 import { generateObject } from 'ai'
 
 import type { RequestHandler } from './$types'
 
 import { imageIdentificationMessages, guideMessages } from '$lib/prompts'
-import { tupleToNumberedObject, numberedObjectToArray } from '$utils/zodTupleToNumberedObject'
 
 import type {
   ErrorResponseData,
   GuideResponseData,
-  MatchedIdentifiedObject,
   ObjectResponseData,
   ResponseTypes,
   RetrievedGuide,
-  ObjectError,
+  IdentifiedObject,
   ResultObject
 } from './types'
-import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
+import { imageIdentificationResponseSchema, guideResponseSchema } from '$lib/schemas'
 
-// const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '', compatibility: 'strict' })
 const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
 
@@ -31,7 +29,12 @@ let requestIndex = 0
 
 const identifyObjects = async (image: string, categories: string[]) =>
   generateObject({
-    model: openai('gpt-4o'),
+    model: openai('gpt-4o', {
+      structuredOutputs: true
+    }),
+    schemaName: 'imageIdentification',
+    schemaDescription:
+      '올바른 분리배출을 위해 이미지의 물건을 인식하고 알맞는 카테고리로 분류합니다.',
     schema: imageIdentificationResponseSchema(categories as [string, ...string[]]),
     messages: imageIdentificationMessages(image, categories)
   }).then((result) => result.object)
@@ -53,27 +56,24 @@ const fetchGuides = async (queries: string[]) =>
 
 const generateGuide = async (
   description: string,
-  identifiedObjects: MatchedIdentifiedObject[],
+  identifiedObjects: IdentifiedObject[],
   sourceGuides: RetrievedGuide[],
   isApartment: boolean
 ): Promise<ResultObject[]> =>
   generateObject({
-    model: openai('gpt-4o-mini'),
-    schema: tupleToNumberedObject(
-      identifiedObjects.map(({ name }) =>
-        singleGuideResponseSchema(
-          name,
-          sourceGuides.map(({ name }) => name) as [string, ...string[]]
-        )
-      )
-    ),
+    model: openai('gpt-4o-mini', {
+      structuredOutputs: true
+    }),
+    schemaName: 'guideGeneration',
+    schemaDescription: '분리배출 방법에서 필요없는 부분을 정리합니다.',
+    schema: guideResponseSchema,
     messages: guideMessages(
       description ?? '',
-      identifiedObjects as MatchedIdentifiedObject[],
+      identifiedObjects,
       sourceGuides,
       isApartment
     )
-  }).then((result) => numberedObjectToArray(result.object) as ResultObject[])
+  }).then((result) => result.object.guides as ResultObject[])
 
 const sendData = (
   controller: ReadableStreamDefaultController,
@@ -126,30 +126,24 @@ export const POST: RequestHandler = async ({ request }) => {
           return
         }
 
-        const identifiedObjectsWithCategories = identificationResult.result?.filter(
-          (obj: object): obj is { name: string; category: string[] } =>
-            'category' in obj && obj.category !== null
-        )
+        const identifiedObjects = identificationResult.result as IdentifiedObject[]
 
-        if (identifiedObjectsWithCategories?.length === 0) {
+        if (identifiedObjects.every((obj) => !obj.category)) {
           sendData(controller, 'error', { error: true, errors: { noMatches: true } })
-          console.log(`✧ #${index} No objects found`)
+          console.log(`✧ #${index} All objects have empty categories`)
           controller.close()
           console.log(`✧ #${index} Closed controller`)
           return
-        } else if ('result' in identificationResult) {
-          const identifiedObjects = identificationResult.result!.map(({ name }) => name)
-          sendData(controller, 'objects', { objects: identifiedObjects })
-          console.log(
-            `✧ #${index} Successfully identified objects: ${identifiedObjects.join(', ')}`
-          )
         } else {
-          console.log(`✧ #${index} Unexpected error occurred`)
-          throw new Error('Unexpected Error Occurred')
+          const identifiedObjectNames = identifiedObjects.map(({ name }) => name)
+          sendData(controller, 'objects', { objects: identifiedObjectNames })
+          console.log(
+            `✧ #${index} Successfully identified objects: ${identifiedObjectNames.join(', ')}`
+          )
         }
 
         const guidesStartTime = Date.now()
-        const guideQueries = identifiedObjectsWithCategories.map(({ category }) => category).flat()
+        const guideQueries = identifiedObjects.flatMap(({ category }) => category).filter((category): category is string => Boolean(category))
         console.log(
           `✧ #${index} Searching guides for: ${guideQueries.join(', ')} (${guideQueries.length})`
         )
@@ -162,7 +156,7 @@ export const POST: RequestHandler = async ({ request }) => {
         const generationStartTime = Date.now()
         const generatedGuides = await generateGuide(
           identificationResult.description,
-          identifiedObjectsWithCategories,
+          identifiedObjects,
           retrievedGuides,
           isApartment
         )
@@ -171,28 +165,16 @@ export const POST: RequestHandler = async ({ request }) => {
           `✧ #${index} Generated guides: ${JSON.stringify(generatedGuides)} (${generatedGuides.length})`
         )
 
-        const processedGuides: ResultObject[] = [
-          ...generatedGuides,
-          ...identificationResult.result
-            .filter((obj) => 'error' in obj && obj.error)
-            .map((obj) => obj as ObjectError)
-        ]
-
-        if (processedGuides.length === 0) {
+        if (generatedGuides.every((guide) => guide.type === 'error')) {
           sendData(controller, 'error', { error: true, errors: { other: true } })
-          console.log(`✧ #${index} No guides generated`)
-        } else if (
-          processedGuides.every((guide): guide is ObjectError => 'error' in guide && guide.error)
-        ) {
-          sendData(controller, 'error', { error: true, errors: { other: true } })
-          console.log(`✧ #${index} All guides have errors`)
+          console.log(`✧ #${index} All generated guides have errors`)
         } else {
-          sendData(controller, 'guide', { guide: processedGuides })
+          sendData(controller, 'guide', { guide: generatedGuides })
           console.log(`✧ #${index} Sent guides to client`)
         }
       } catch (error) {
         sendData(controller, 'error', { error: true, errors: { other: true } })
-        console.log(`✧ #${index} Error catched: ${error}`)
+        console.log(`✧ #${index} Error caught: ${error}`)
         console.error(error)
       } finally {
         controller.close()
