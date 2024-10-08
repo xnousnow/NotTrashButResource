@@ -24,7 +24,13 @@ export const imageIdentificationMessages = (image: string, categories: string[])
         **한국어로 답변하세요.**
       `
     },
-    { role: 'user', content: [{ type: 'image', image }] }
+    {
+      role: 'user',
+      content: [{ type: 'image', image }],
+      experimental_providerMetadata: {
+        openai: { imageDetail: 'low' }
+      }
+    }
   ]
 }
 
