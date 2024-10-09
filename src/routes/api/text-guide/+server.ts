@@ -1,18 +1,17 @@
 import { json } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 
-import { createClient } from '@supabase/supabase-js'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 
 import { categorizationMessages } from '$lib/prompts'
 import { categorizationResponseSchema } from '$lib/schemas'
+import { getCategoryNames, getGuides } from '$lib/utils/supabase'
 
 import type { RequestHandler } from './$types'
 import type { ErrorResponse, GuideResponse, ObjectError, ResultObject } from './types'
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
-const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
 
 let requestIndex = 0
 
@@ -22,20 +21,6 @@ const categorizeObject = async (object: string, categories: string[]) =>
     schema: categorizationResponseSchema,
     messages: categorizationMessages(object, categories)
   }).then((result) => result.object.result)
-
-const fetchGuides = async (queries: string[]) =>
-  supabase
-    .from('guidebook')
-    .select('*')
-    .in('name', queries)
-    .then(
-      (result) =>
-        result.data?.map(({ name, guide, tips }) => ({
-          name,
-          guide: guide.split('\n'),
-          tips: tips?.split('\n')
-        })) ?? []
-    )
 
 export const POST: RequestHandler = async ({ request }) => {
   const { object } = await request.json()
@@ -47,10 +32,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   try {
     const categoriesStartTime = Date.now()
-    const categories = await supabase
-      .from('guidebook')
-      .select('name')
-      .then((result) => result.data?.map(({ name }) => name) ?? [])
+    const categories = await getCategoryNames()
     timings.push({ step: 'Fetching categories', duration: Date.now() - categoriesStartTime })
     console.log(
       `✧ #${index} Fetched categories: ${categories.slice(0, 5).join(', ')}... (${categories.length})`
@@ -58,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
     if (categories.includes(object)) {
       const guideStartTime = Date.now()
-      const guide = await fetchGuides([object])
+      const guide = await getGuides([object])
       timings.push({ step: 'Fetching guide', duration: Date.now() - guideStartTime })
       console.log(`✧ #${index} Fetched guide: ${JSON.stringify(guide)}`)
 
@@ -139,7 +121,7 @@ export const POST: RequestHandler = async ({ request }) => {
     console.log(
       `✧ #${index} Searching guides for: ${guideQueries.join(', ')} (${guideQueries.length})`
     )
-    const retrievedGuides = await fetchGuides(guideQueries)
+    const retrievedGuides = await getGuides(guideQueries)
     timings.push({ step: 'Fetching guides', duration: Date.now() - guideStartTime })
     console.log(
       `✧ #${index} Fetched guides: ${JSON.stringify(retrievedGuides)} (${retrievedGuides.length})`

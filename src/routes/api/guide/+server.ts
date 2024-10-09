@@ -1,15 +1,15 @@
 import { env } from '$env/dynamic/private'
 
-import { createClient } from '@supabase/supabase-js'
-
 import { createOpenAI } from '@ai-sdk/openai'
 // import { createAnthropic } from '@ai-sdk/anthropic'
 import { generateObject } from 'ai'
 
 import type { RequestHandler } from './$types'
 
-import { imageIdentificationMessages, guideMessages } from '$lib/prompts'
+import { guideMessages, imageIdentificationMessages } from '$lib/prompts'
+import { getCategoryNames, getGuides } from '$lib/utils/supabase'
 
+import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 import type {
   ErrorResponseData,
   GuideResponseData,
@@ -18,11 +18,9 @@ import type {
   ResponseTypes,
   RetrievedGuide
 } from './types'
-import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 
 // const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
-const supabase = createClient(env.SUPABASE_URL ?? '', env.SUPABASE_ANON_KEY ?? '')
 
 let requestIndex = 0
 
@@ -32,21 +30,6 @@ const identifyObjects = async (image: string, categories: string[]) =>
     schema: imageIdentificationResponseSchema,
     messages: imageIdentificationMessages(image, categories)
   }).then((result) => result.object)
-
-const fetchGuides = async (queries: string[]) =>
-  supabase
-    .from('guidebook')
-    .select('*')
-    .in('name', queries)
-    .then(
-      (result) =>
-        result.data?.map(({ name, guide, tips, category }) => ({
-          name,
-          guide: guide.split('\n'),
-          tips: tips?.split('\n'),
-          category
-        })) ?? []
-    )
 
 const generateGuide = async (
   description: string,
@@ -87,10 +70,7 @@ export const POST: RequestHandler = async ({ request }) => {
     async start(controller) {
       try {
         const categoriesStartTime = Date.now()
-        const categories = await supabase
-          .from('guidebook')
-          .select('name')
-          .then((result) => result.data?.map(({ name }) => name) ?? [])
+        const categories = await getCategoryNames()
         timings.push({ step: 'Fetching categories', duration: Date.now() - categoriesStartTime })
         console.log(
           `✧ #${index} Fetched categories: ${categories.slice(0, 5).join(', ')}... (${categories.length})`
@@ -117,7 +97,6 @@ export const POST: RequestHandler = async ({ request }) => {
           return
         }
 
-        // identified objects that has categories (length > 0 or not null)
         const identifiedObjectsWithCategories = identificationResult.result?.filter(
           (obj: object): obj is { name: string; category: string[] } =>
             'category' in obj && obj.category !== null
@@ -145,7 +124,7 @@ export const POST: RequestHandler = async ({ request }) => {
         console.log(
           `✧ #${index} Searching guides for: ${guideQueries.join(', ')} (${guideQueries.length})`
         )
-        const retrievedGuides = await fetchGuides(guideQueries)
+        const retrievedGuides = await getGuides(guideQueries)
         timings.push({ step: 'Fetching guides', duration: Date.now() - guidesStartTime })
         console.log(
           `✧ #${index} Fetched guides: ${JSON.stringify(retrievedGuides)} (${retrievedGuides.length})`
