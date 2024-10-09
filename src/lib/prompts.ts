@@ -8,9 +8,7 @@ export const imageIdentificationMessages = (image: string, categories: string[])
     {
       role: 'system',
       content: dedent`
-        사용자가 분리배출하려는 물건이 있는 이미지가 주어질 것입니다. 사용자가 물건을 올바르게 분리배출할 수 있도록 이미지의 각 물건을 정확히 인식하고 다음 목록에 따라 분류하세요.
-
-        카테고리: ${categories.join(', ')}
+        사용자가 분리배출하려는 물건이 있는 이미지가 주어질 것입니다. 사용자가 물건을 올바르게 분리배출할 수 있도록 이미지의 각 물건을 정확히 인식하고 목록에 따라 분류하세요.
 
         지시:
         1. 이미지에서 사용자가 분리배출하려는 것으로 보이는 모든 물건을 인식하세요.
@@ -19,6 +17,8 @@ export const imageIdentificationMessages = (image: string, categories: string[])
           - 정확한 카테고리가 없어도, 가장 적절한 분리배출 방법을 가지고 있을 카테고리를 선택하세요.
           - LED, 형광등인지 알 수 없는 전등과 같이, 정확한 카테고리를 알 수 없는 물건은 여러 개를 선택하세요.
         3. 만약 아무 카테고리에도 속하지 않거나 다른 문제가 있다면, 답변에서 알맞은 오류를 선택하세요.
+
+        카테고리: ${categories.join(', ')}
 
         **한국어로 답변하세요.**
       `
