@@ -1,51 +1,15 @@
-import { env } from '$env/dynamic/private'
-
-import { createOpenAI } from '@ai-sdk/openai'
-// import { createAnthropic } from '@ai-sdk/anthropic'
-import { generateObject } from 'ai'
-
 import type { RequestHandler } from './$types'
 
-import { guideMessages, imageIdentificationMessages } from '$lib/prompts'
 import { getCategoryNames, getGuides } from '$lib/utils/supabase'
+import { identifyObjects, generateGuides } from '$lib/ai'
 
-import { imageIdentificationResponseSchema, singleGuideResponseSchema } from '$lib/schemas'
 import type {
   ErrorResponseData,
   GuideResponseData,
-  MatchedIdentifiedObject,
   ObjectResponseData,
   ResponseTypes,
-  RetrievedGuide
-} from './types'
-
-// const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY ?? '' })
-const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
-
-const identifyObjects = async (image: string, categories: string[]) =>
-  generateObject({
-    model: openai('gpt-4o-2024-08-06'),
-    schema: imageIdentificationResponseSchema,
-    messages: imageIdentificationMessages(image, categories)
-  }).then((result) => result.object)
-
-const generateGuide = async (
-  description: string,
-  identifiedObjects: MatchedIdentifiedObject[],
-  sourceGuides: RetrievedGuide[],
-  isApartment: boolean
-) =>
-  generateObject({
-    model: openai('gpt-4o-mini'),
-    output: 'array',
-    schema: singleGuideResponseSchema,
-    messages: guideMessages(
-      description ?? '',
-      identifiedObjects as MatchedIdentifiedObject[],
-      sourceGuides,
-      isApartment
-    )
-  }).then((result) => result.object)
+  ResultObject
+} from '$lib/types'
 
 const sendData = (
   controller: ReadableStreamDefaultController,
@@ -92,7 +56,7 @@ export const POST: RequestHandler = async ({ request }) => {
         const guideQueries = identifiedObjectsWithCategories.map(({ category }) => category).flat()
         const retrievedGuides = await getGuides(guideQueries)
 
-        const generatedGuides = await generateGuide(
+        const generatedGuides = await generateGuides(
           identificationResult.description,
           identifiedObjectsWithCategories,
           retrievedGuides,
@@ -101,10 +65,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
         if (generatedGuides.length === 0) {
           sendData(controller, 'error', { error: true, errors: { other: true } })
-        } else if (generatedGuides.every((guide) => 'error' in guide && guide.error)) {
+        } else if (
+          generatedGuides.every((guide: ResultObject) => 'error' in guide && guide.error)
+        ) {
           sendData(controller, 'error', { error: true, errors: { other: true } })
         } else {
-          sendData(controller, 'guide', { guide: generatedGuides })
+          sendData(controller, 'guide', { guide: generatedGuides as ResultObject[] })
         }
       } catch (error) {
         sendData(controller, 'error', { error: true, errors: { other: true } })

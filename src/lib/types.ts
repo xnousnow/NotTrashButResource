@@ -102,3 +102,44 @@ export interface ErrorResponse extends ResponseBase {
 
 export type Response = ObjectResponse | GuideResponse | ErrorResponse
 export type ResponseData = ObjectResponseData | GuideResponseData | ErrorResponseData
+
+// TEXT GUIDE
+export interface TextObjectError {
+  name: string
+  error: true
+  errors: {
+    noMatch?: boolean
+    other?: boolean
+  }
+}
+
+export type TextResultObject = ObjectGuide | ObjectError
+
+export type TextResponseTypes = 'guide' | 'error'
+
+export interface TextResponseBase {
+  type: ResponseTypes
+}
+
+export interface TextGuideResponseData {
+  guide: ResultObject[]
+}
+
+export interface TextGuideResponse extends TextResponseBase {
+  type: 'guide'
+  data: GuideResponseData
+}
+
+export interface TextErrorResponseData {
+  error: true
+  errors: {
+    unrelated?: boolean
+    noMatches?: boolean
+    other?: boolean
+  }
+}
+
+export interface TextErrorResponse extends TextResponseBase {
+  type: 'error'
+  data: TextErrorResponseData
+}

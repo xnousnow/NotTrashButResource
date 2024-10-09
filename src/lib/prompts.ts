@@ -1,7 +1,7 @@
 import dedent from 'dedent'
 
 import type { CoreMessage } from 'ai'
-import type { RetrievedGuide, MatchedIdentifiedObject } from '$api/guide/types'
+import type { RetrievedGuide, MatchedIdentifiedObject } from '$lib/types'
 
 export const imageIdentificationMessages = (image: string, categories: string[]): CoreMessage[] => {
   return [

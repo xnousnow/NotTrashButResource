@@ -21,7 +21,7 @@
     GuideResponseData,
     ObjectResponseData,
     ResultObject
-  } from '../api/guide/types'
+  } from '$lib/ai/types'
 
   let generating = true
 

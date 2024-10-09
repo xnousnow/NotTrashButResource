@@ -1,24 +1,15 @@
 import { json } from '@sveltejs/kit'
-import { env } from '$env/dynamic/private'
 
-import { createOpenAI } from '@ai-sdk/openai'
-import { generateObject } from 'ai'
-
-import { categorizationMessages } from '$lib/prompts'
-import { categorizationResponseSchema } from '$lib/schemas'
 import { getCategoryNames, getGuides } from '$lib/utils/supabase'
+import { categorizeObject } from '$lib/ai'
 
 import type { RequestHandler } from './$types'
-import type { ErrorResponse, GuideResponse, ObjectError, ResultObject } from './types'
-
-const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
-
-const categorizeObject = async (object: string, categories: string[]) =>
-  generateObject({
-    model: openai('gpt-4o'),
-    schema: categorizationResponseSchema,
-    messages: categorizationMessages(object, categories)
-  }).then((result) => result.object.result)
+import type {
+  TextErrorResponse as ErrorResponse,
+  TextGuideResponse as GuideResponse,
+  TextObjectError as ObjectError,
+  TextResultObject as ResultObject
+} from '$lib/types'
 
 export const POST: RequestHandler = async ({ request }) => {
   const { object } = await request.json()
