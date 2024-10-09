@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit'
 
 import { getCategoryNames, getGuides } from '$lib/utils/supabase'
-import { categorizeObject } from '$lib/ai'
+import { categorizeObject } from '$lib/ai/ai'
 
 import type { RequestHandler } from './$types'
 import type {
@@ -9,7 +9,7 @@ import type {
   TextGuideResponse as GuideResponse,
   TextObjectError as ObjectError,
   TextResultObject as ResultObject
-} from '$lib/types'
+} from '$lib/ai/types'
 
 export const POST: RequestHandler = async ({ request }) => {
   const { object } = await request.json()

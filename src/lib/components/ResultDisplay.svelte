@@ -9,7 +9,7 @@
 
   import { inputMode } from '$lib/stores'
 
-  import type { ResultObject } from '$api/guide/types'
+  import type { ResultObject } from '$lib/ai/types'
 
   export let guides: ResultObject[]
   export let regenerate: () => void

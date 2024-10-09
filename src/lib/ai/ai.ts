@@ -3,14 +3,14 @@ import { env } from '$env/dynamic/private'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 
-import { imageIdentificationMessages, categorizationMessages, guideMessages } from '$lib/prompts'
+import { imageIdentificationMessages, categorizationMessages, guideMessages } from '$lib/ai/prompts'
 import {
   imageIdentificationResponseSchema,
   categorizationResponseSchema,
   singleGuideResponseSchema
-} from '$lib/schemas'
+} from '$lib/ai/schemas'
 
-import type { MatchedIdentifiedObject, RetrievedGuide } from '$lib/types'
+import type { MatchedIdentifiedObject, RetrievedGuide } from '$lib/ai/types'
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 

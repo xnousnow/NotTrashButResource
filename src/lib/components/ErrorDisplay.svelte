@@ -15,8 +15,8 @@
 
   import { inputMode } from '$lib/stores'
 
-  import type { ErrorResponseData as ImageErrorResponseData } from '$api/guide/types'
-  import type { ErrorResponseData as TextErrorResponseData } from '$api/text-guide/types'
+  import type { ErrorResponseData as ImageErrorResponseData } from '$lib/ai/types'
+  import type { TextErrorResponseData } from '$lib/ai/types'
 
   export let error: ImageErrorResponseData & TextErrorResponseData
   export let usePlural: boolean

@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types'
 
 import { getCategoryNames, getGuides } from '$lib/utils/supabase'
-import { identifyObjects, generateGuides } from '$lib/ai'
+import { identifyObjects, generateGuides } from '$lib/ai/ai'
 
 import type {
   ErrorResponseData,
@@ -9,7 +9,7 @@ import type {
   ObjectResponseData,
   ResponseTypes,
   ResultObject
-} from '$lib/types'
+} from '$lib/ai/types'
 
 const sendData = (
   controller: ReadableStreamDefaultController,
