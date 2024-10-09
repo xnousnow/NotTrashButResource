@@ -13,8 +13,6 @@ import type { ErrorResponse, GuideResponse, ObjectError, ResultObject } from './
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 
-let requestIndex = 0
-
 const categorizeObject = async (object: string, categories: string[]) =>
   generateObject({
     model: openai('gpt-4o'),
@@ -25,24 +23,11 @@ const categorizeObject = async (object: string, categories: string[]) =>
 export const POST: RequestHandler = async ({ request }) => {
   const { object } = await request.json()
 
-  const index = requestIndex++
-  const timings: { step: string; duration: number }[] = []
-
-  console.log(`✦ #${index} Received request`)
-
   try {
-    const categoriesStartTime = Date.now()
     const categories = await getCategoryNames()
-    timings.push({ step: 'Fetching categories', duration: Date.now() - categoriesStartTime })
-    console.log(
-      `✧ #${index} Fetched categories: ${categories.slice(0, 5).join(', ')}... (${categories.length})`
-    )
 
     if (categories.includes(object)) {
-      const guideStartTime = Date.now()
       const guide = await getGuides([object])
-      timings.push({ step: 'Fetching guide', duration: Date.now() - guideStartTime })
-      console.log(`✧ #${index} Fetched guide: ${JSON.stringify(guide)}`)
 
       const editedGuide = guide.map((item) => ({
         ...item,
@@ -58,13 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
       return json(response)
     }
 
-    const identificationStartTime = Date.now()
     const categorizationResult = await categorizeObject(object, categories)
-    timings.push({
-      step: 'Identifying objects',
-      duration: Date.now() - identificationStartTime
-    })
-    console.log(`✧ #${index} Categorization result: ${JSON.stringify(categorizationResult)}`)
 
     if (categorizationResult.length == 0) {
       const errorResponse: ErrorResponse = {
@@ -110,7 +89,6 @@ export const POST: RequestHandler = async ({ request }) => {
       return json(errorResponse)
     }
 
-    const guideStartTime = Date.now()
     const guideQueries = categorizationResult
       .filter(
         (obj): obj is { name: string; category: string[] } =>
@@ -118,14 +96,7 @@ export const POST: RequestHandler = async ({ request }) => {
       )
       .map(({ category }) => category)
       .flat()
-    console.log(
-      `✧ #${index} Searching guides for: ${guideQueries.join(', ')} (${guideQueries.length})`
-    )
     const retrievedGuides = await getGuides(guideQueries)
-    timings.push({ step: 'Fetching guides', duration: Date.now() - guideStartTime })
-    console.log(
-      `✧ #${index} Fetched guides: ${JSON.stringify(retrievedGuides)} (${retrievedGuides.length})`
-    )
 
     const guides: ResultObject[] = categorizationResult.flatMap((result): ResultObject[] => {
       if ('category' in result && result.category !== null) {
@@ -150,16 +121,11 @@ export const POST: RequestHandler = async ({ request }) => {
     }
     return json(response)
   } catch (error) {
-    console.error(`✧ #${index} Error occurred:`, error)
+    console.error('Error occurred:', error)
     const errorResponse: ErrorResponse = {
       type: 'error',
       data: { error: true, errors: { other: true } }
     }
     return json(errorResponse)
-  } finally {
-    console.log(`✧ #${index} Timings:`)
-    timings.forEach(({ step, duration }) => {
-      console.log(`    ${step}: ${duration}ms`)
-    })
   }
 }
