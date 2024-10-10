@@ -21,7 +21,7 @@
 >
   {#each guides as guide}
     {#if 'guide' in guide}
-      <div class="">
+      <div>
         <h1 class="my-1 pl-1 text-4xl font-bold">{guide.name}</h1>
         <span class="my-1 ml-1 flex items-center gap-1 text-base font-medium text-white/50">
           <ImportContacts class="h-6 w-6" />
