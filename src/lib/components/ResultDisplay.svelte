@@ -62,10 +62,9 @@
     class="fixed bottom-0 left-0 flex w-screen justify-center pb-10 pt-3 backdrop-blur"
     in:fly|global={{ y: 30, duration: 500 }}
   >
-    <SmallButton
-      Icon={Refresh}
-      text={$inputMode === 'image' ? '다른 답변 받기' : '다시 시도하기'}
-      action={regenerate}
-    />
+    <SmallButton on:click={regenerate}>
+      <Refresh />
+      <span>{$inputMode === 'image' ? '다른 답변 받기' : '다시 시도하기'}</span>
+    </SmallButton>
   </div>
 </div>

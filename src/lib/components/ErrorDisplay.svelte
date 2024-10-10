@@ -52,11 +52,19 @@
   {/if}
   <div class="flex gap-1.5">
     <SmallButton
-      Icon={$inputMode === 'image' ? PhotoCamera : Keyboard}
-      action={() => {
+      on:click={() => {
         goto('/')
       }}
-    />
-    <SmallButton Icon={Refresh} text="다시 시도" action={regenerate} />
+    >
+      {#if $inputMode === 'image'}
+        <PhotoCamera />
+      {:else}
+        <Keyboard />
+      {/if}
+    </SmallButton>
+    <SmallButton on:click={regenerate}>
+      <Refresh />
+      <span>다시 시도</span>
+    </SmallButton>
   </div>
 </div>
