@@ -35,10 +35,16 @@ export const generateGuides = async (
   identificationResult: Extract<ImageIdentificationAIResponse['result'], object[]>,
   sourceGuides: RetrievedGuide[],
   options: RequestBase['options']
-) =>
-  generateObject({
+) => {
+  console.log('generateGuides called');
+  
+  console.log('Before calling guideMessages');
+  const messages = guideMessages(imageDescription, identificationResult, sourceGuides, options);
+  console.log('After calling guideMessages');
+  return generateObject({
     model: openai('gpt-4o-mini'),
     output: 'array',
     schema: singleGuideResponseSchema,
-    messages: guideMessages(imageDescription, identificationResult, sourceGuides, options)
+    messages: messages
   })
+}

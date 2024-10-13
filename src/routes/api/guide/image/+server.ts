@@ -84,13 +84,11 @@ export const POST: RequestHandler = async ({ request }) => {
         
         console.log(`Fetched guides: ${JSON.stringify(originalGuides)}`)
         
-        console.log(`
-          So imma do it
-          ${identificationResult.description}
-          ${identificationResult.result}
-          ${originalGuides}
-          ${options}
-        `)
+        console.log('So imma do it');
+        console.log('identificationResult.description:', identificationResult.description);
+        console.log('identificationResult.result:', JSON.stringify(identificationResult.result, null, 2));
+        console.log('originalGuides:', JSON.stringify(originalGuides, null, 2));
+        console.log('options:', JSON.stringify(options, null, 2));
 
         const { object: generatedGuides, usage: guideGenerationUsage } = await generateGuides(
           identificationResult.description,

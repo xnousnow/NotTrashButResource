@@ -95,7 +95,44 @@ export const guideMessages = (
   identificationResult: Extract<ImageIdentificationAIResponse['result'], object[]>,
   guides: RetrievedGuide[],
   options: RequestBase['options']
-): CoreMessage[] => [
+): CoreMessage[] => {
+  console.log('guideMessages called');
+  console.log('Variables:', {
+    imageDescription,
+    identificationResult,
+    guides,
+    options
+  });
+
+  try {
+    console.log(dedent`
+      이미지 설명: ${imageDescription}
+      인식된 물건:
+      ${identificationResult
+        .map((object) =>
+          `- ${object.name}: ${
+            object.category.length ? object.category.join(', ') : '카테고리 없음'
+          }`
+        )
+        .join('\n')}
+      주거 환경: ${options.residenceType == 'apartment' ? '아파트' : '주택'}
+    
+      ${guides
+        .map(
+          (guide) => dedent`
+            # ${guide.name}
+            ${guide.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}
+            ${guide.tips ? `\n${guide.tips.map((tip) => `- ${tip}`).join('\n')}` : ''}
+          `
+        )
+        .join('\n\n')}
+    `);
+  } catch (error) {
+    console.error('Error in guideMessages console.log:', error);
+  }
+
+  // Rest of your code
+  return [
   {
     role: 'system',
     content: dedent`
@@ -229,5 +266,5 @@ export const guideMessages = (
         )
         .join('\n\n')}
     `
-  }
-]
+  }]
+}
