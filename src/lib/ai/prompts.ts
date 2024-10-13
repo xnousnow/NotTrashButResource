@@ -180,7 +180,7 @@ export const guideMessages = (
     content: dedent`
       [
         { "name": "인형", "guide": ["일반쓰레기로 배출해요."], "tips": ["인형, 천, 솜 등은 재활용이 불가한 섬유 재질이에요.", "만약 종량제 봉투에 담기 힘들만큼 크다면 가위로 자르거나 대형생활폐기물로 신고해 배출해요."], "reference": ["인형/천/솜"] },
-        { "name": "플라스틱 장난감", "guide": ["일반쓰레기로 배출해요."], "reference": ["플라스틱 장난감"] }
+        { "name": "장난감", "guide": ["일반쓰레기로 배출해요."], "reference": ["플라스틱 장난감"] }
       ]
     `
   },
@@ -204,23 +204,23 @@ export const guideMessages = (
     role: 'assistant',
     content: dedent`
       [
-        { "name": "소형 가전제품", "guide": ["제품이 쓸만하면 중고품으로 재사용되도록 팔거나 지역별 재활용센터로 보내요. 상태와 사용 기간에 따라 돈을 받거나 무상으로 넘길 수 있어요.", "재사용이 어려운 경우 새 제품을 살때 기존 제품을 회수 요청해요. 생산자의 무상방문수거 서비스를 이용해요.", "크다면 대형 쓰레기로 배출 신고를 하고 수수료를 지불할 수 있어요."], "reference": ["소형 가전제품"] }
+        { "name": "소형 선풍기", "guide": ["제품이 쓸만하면 중고품으로 재사용되도록 팔거나 지역별 재활용센터로 보내요. 상태와 사용 기간에 따라 돈을 받거나 무상으로 넘길 수 있어요.", "재사용이 어려운 경우 새 제품을 살때 기존 제품을 회수 요청해요. 생산자의 무상방문수거 서비스를 이용해요.", "크다면 대형 쓰레기로 배출 신고를 하고 수수료를 지불할 수 있어요."], "reference": ["소형 가전제품"] }
       ]
     `
   },
   {
     role: 'user',
     content: dedent`
-      이미지 설명: ${description}
+      이미지 설명: ${imageDescription}
       인식된 물건:
-      ${objects.map((object) => `- ${object.name}: ${object.category.length ? object.category.join(', ') : '카테고리 없음'}`).join('\n')}
-      주거 환경: ${isApartment ? '아파트' : '주택'}
+      ${identificationResult.map((object) => `- ${object.name}: ${object.category.length ? object.category.join(', ') : '카테고리 없음'}`).join('\n')}
+      주거 환경: ${options.residenceType == 'apartment' ? '아파트' : '주택'}
 
       ${guides
         .map(
           (guide) => dedent`
             # ${guide.name}
-            ${guide.guide.map((step, index) => `${index + 1}. ${step}`).join('\n')}
+            ${guide.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}
             ${'tips' in guide ? `\n${guide.tips?.map((tip) => `- ${tip}`).join('\n')}` : ''}
           `
         )
