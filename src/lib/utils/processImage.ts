@@ -1,4 +1,4 @@
-export const processImage = (file: File, maxWidth: number, maxHeight: number) =>
+export default (file: File, maxWidth: number, maxHeight: number) =>
   new Promise<string>((resolve, reject) => {
     if (!(file instanceof Blob))
       return reject(new TypeError('The provided value is not a Blob or File.'))

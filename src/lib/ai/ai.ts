@@ -9,8 +9,10 @@ import {
   categorizationResponseSchema,
   singleGuideResponseSchema
 } from '$lib/ai/schemas'
+import type { RetrievedGuide } from '$lib/utils/supabase'
 
-import type { MatchedIdentifiedObject, RetrievedGuide } from '$lib/ai/types'
+import type { RequestBase } from '$routes/api/guide/types'
+import type { ImageIdentificationAIResponse } from './types'
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 
@@ -19,29 +21,24 @@ export const identifyObjects = async (image: string, categories: string[]) =>
     model: openai('gpt-4o'),
     schema: imageIdentificationResponseSchema,
     messages: imageIdentificationMessages(image, categories)
-  }).then((result) => result.object)
+  })
 
 export const categorizeObject = async (object: string, categories: string[]) =>
   generateObject({
     model: openai('gpt-4o'),
     schema: categorizationResponseSchema,
     messages: categorizationMessages(object, categories)
-  }).then((result) => result.object.result)
+  })
 
 export const generateGuides = async (
-  description: string,
-  identifiedObjects: MatchedIdentifiedObject[],
+  imageDescription: string,
+  identificationResult: Extract<ImageIdentificationAIResponse['result'], object[]>,
   sourceGuides: RetrievedGuide[],
-  isApartment: boolean
+  options: RequestBase['options']
 ) =>
   generateObject({
     model: openai('gpt-4o-mini'),
     output: 'array',
     schema: singleGuideResponseSchema,
-    messages: guideMessages(
-      description ?? '',
-      identifiedObjects as MatchedIdentifiedObject[],
-      sourceGuides,
-      isApartment
-    )
-  }).then((result) => result.object)
+    messages: guideMessages(imageDescription, identificationResult, sourceGuides, options)
+  })

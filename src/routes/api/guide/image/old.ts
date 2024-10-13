@@ -3,22 +3,6 @@ import type { RequestHandler } from './$types'
 import { getCategoryNames, getGuides } from '$lib/utils/supabase'
 import { identifyObjects, generateGuides } from '$lib/ai/ai'
 
-import type {
-  ErrorResponseData,
-  GuideResponseData,
-  ObjectResponseData,
-  ResponseTypes,
-  ResultObject
-} from '$lib/ai/types'
-
-const sendData = (
-  controller: ReadableStreamDefaultController,
-  type: ResponseTypes,
-  data: ObjectResponseData | GuideResponseData | ErrorResponseData
-) => {
-  controller.enqueue(JSON.stringify({ type, data }))
-}
-
 export const POST: RequestHandler = async ({ request }) => {
   const { image, isApartment } = await request.json()
 
