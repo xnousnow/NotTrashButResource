@@ -1,6 +1,4 @@
-import { env } from '$env/dynamic/private'
-
-import { createOpenAI } from '@ai-sdk/openai'
+import { openai } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 
 import { imageIdentificationMessages, categorizationMessages, guideMessages } from '$lib/ai/prompts'
@@ -13,8 +11,6 @@ import type { RetrievedGuide } from '$lib/utils/supabase'
 
 import type { RequestBase } from '$routes/api/guide/types'
 import type { ImageIdentificationAIResponse } from './types'
-
-const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY ?? '' })
 
 export const identifyObjects = async (image: string, categories: string[]) =>
   generateObject({
