@@ -12,11 +12,7 @@
   import { input, options } from '$lib/stores'
   import { useAPI } from '$utils/useAPI'
 
-  import type {
-    ErrorResponse,
-    GuideResponse,
-    InfoResponse
-  } from '$api/guide/types'
+  import type { ErrorResponse, GuideResponse, InfoResponse } from '$api/guide/types'
 
   let generating = true
 
@@ -53,10 +49,10 @@
       generating = false
     }
   }
-  
+
   onMount(async () => {
     if (!$input) goto('/')
-    
+
     await generate()
   })
 </script>
@@ -80,7 +76,7 @@
       >
         <div class="relative pt-8">
           {#if error.error}
-            <ErrorDisplay {error}  regenerate={generate} />
+            <ErrorDisplay {error} regenerate={generate} />
           {:else}
             <ResultDisplay {guides} regenerate={generate} />
           {/if}

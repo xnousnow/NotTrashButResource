@@ -114,7 +114,11 @@
         <ArrowBack class="h-6 w-6" />
       </a>
       <div class="relative overflow-hidden rounded-3xl">
-        <img src={capturedImageURL} alt="Captured" class="h-full max-h-[30vh] w-full object-cover" />
+        <img
+          src={capturedImageURL}
+          alt="Captured"
+          class="h-full max-h-[30vh] w-full object-cover"
+        />
       </div>
       <div
         class="grow [-ms-overflow-style:none] [scrollbar-width:0] [&::-webkit-scrollbar]:hidden"

@@ -116,7 +116,7 @@ export const POST: RequestHandler = async ({ request }) => {
         controller.enqueue(JSON.stringify(guideResponse) + '\n')
       } catch (err) {
         console.error(err)
-        
+
         const errorResponse: ErrorResponse = {
           type: 'error',
           data: {
