@@ -15,11 +15,10 @@
 
   import { inputMode } from '$lib/stores'
 
-  import type { ErrorResponseData as ImageErrorResponseData } from '$lib/ai/types'
-  import type { TextErrorResponseData } from '$lib/ai/types'
+  import type { ErrorResponse } from '$api/guide/types'
 
-  export let error: ImageErrorResponseData & TextErrorResponseData
-  export let usePlural: boolean
+  export let error: ErrorResponse['data']
+  export let usePlural: boolean = false
   export let regenerate: () => void
 </script>
 

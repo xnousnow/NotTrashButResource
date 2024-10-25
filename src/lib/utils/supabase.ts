@@ -20,10 +20,11 @@ export const getGuides = async (queries: string[]) =>
     .in('name', queries)
     .then(
       (result) =>
-        result.data?.map(({ name, guide, tips, category }) => ({
-          name,
-          guide: guide.split('\n'),
-          tips: tips?.split('\n'),
-          category
+        result.data?.map(({ name, guide, tips }) => ({
+          name: name as string,
+          steps: guide.split('\n') as string[],
+          tips: tips?.split('\n') as string[] | undefined
         })) ?? []
     )
+
+export type RetrievedGuide = Awaited<ReturnType<typeof getGuides>>[number]

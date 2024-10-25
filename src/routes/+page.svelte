@@ -12,7 +12,7 @@
 
   import CaptureMenu from '$components/CaptureMenu.svelte'
 
-  import { inputMode, inputStore, isApartment, localStorageLoaded } from '$lib/stores'
+  import { inputMode, inputStore, options, localStorageLoaded } from '$lib/stores'
 
   let video: HTMLVideoElement
   let imageFile: File
@@ -60,7 +60,7 @@
     if (inputElement.files && inputElement.files[0]) {
       imageFile = inputElement.files[0]
       inputStore.set(imageFile)
-      goto('/guide')
+      goto('/guide/image')
     }
   }
 
@@ -79,11 +79,11 @@
           return
         }
         inputStore.set(imageFile)
-        goto('/guide')
+        goto('/guide/image')
       }, 'image/jpeg')
     } else if ($inputMode === 'text') {
       inputStore.set(textInput)
-      goto('/guide')
+      goto('/guide/text')
     }
   }
 </script>
@@ -96,11 +96,15 @@
     <div class="absolute z-50 flex w-full p-3">
       <button
         class="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/20 p-2 duration-200 hover:bg-white/30"
-        on:click={() => isApartment.set(!$isApartment)}
+        on:click={() =>
+          options.set({
+            ...options,
+            residenceType: $options.residenceType === 'apartment' ? 'house' : 'apartment'
+          })}
       >
         {#if !$localStorageLoaded}
           <div transition:blur={{ duration: 200, amount: 2 }} class="absolute"></div>
-        {:else if $isApartment}
+        {:else if $options.residenceType === 'apartment'}
           <div transition:blur={{ duration: 200, amount: 2 }} class="absolute">
             <Apartment class="h-6 w-6" />
           </div>

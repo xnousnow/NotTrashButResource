@@ -9,9 +9,9 @@
 
   import { inputMode } from '$lib/stores'
 
-  import type { ResultObject } from '$lib/ai/types'
+  import type { GuideResponse } from '$api/guide/types'
 
-  export let guides: ResultObject[]
+  export let guides: GuideResponse['data']['guide']
   export let regenerate: () => void
 </script>
 
@@ -20,7 +20,7 @@
   transition:blur={{ duration: 300 }}
 >
   {#each guides as guide}
-    {#if 'guide' in guide}
+    {#if 'steps' in guide}
       <div>
         <h1 class="my-1 pl-1 text-4xl font-bold">{guide.name}</h1>
         <span class="my-1 ml-1 flex items-center gap-1 text-base font-medium text-white/50">
@@ -29,7 +29,7 @@
         </span>
       </div>
       <ul class="space-y-2">
-        {#each guide.guide as step, i}
+        {#each guide.steps as step, i}
           <li class="flex gap-2">
             <span
               class="flex h-6 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 p-0.5 font-semibold"

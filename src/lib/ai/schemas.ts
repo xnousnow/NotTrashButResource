@@ -8,33 +8,16 @@ export const imageIdentificationResponseSchema = z.object({
     ),
   result: z.union([
     z.array(
-      z.union([
-        z.object({
-          name: z.string().describe('물건의 이름'),
-          category: z.array(z.string()).describe('알맞는 카테고리(들)')
-        }),
-        z.object({
-          name: z.string().describe('물건의 이름'),
-          error: z.literal(true),
-          errors: z.object({
-            noMatch: z.boolean().describe('물건에 알맞는 카테고리가 없음'),
-            notReal: z
-              .boolean()
-              .optional()
-              .describe('이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음'),
-            other: z.boolean().describe('기타 오류')
-          })
-        })
-      ])
+      z.object({
+        name: z.string().describe('물건의 이름'),
+        category: z.array(z.string()).describe('알맞는 카테고리(들), 오류가 있다면 빈 배열')
+      })
     ),
     z.object({
       error: z.literal(true),
       errors: z.object({
         noObjects: z.boolean().describe('이미지에 물건이 없음'),
-        imageError: z
-          .boolean()
-          .describe('이미지가 현실의 물건을 나타내지 않으며 분리배출할 수 없음, 또는 이미지 오류'),
-        other: z.boolean().describe('기타 이미지 오류')
+        imageError: z.boolean().describe('이미지가 불분명하거나 물건이 잘 보이지 않음')
       })
     })
   ])
@@ -43,27 +26,17 @@ export const imageIdentificationResponseSchema = z.object({
 export const categorizationResponseSchema = z.object({
   thought: z.string().describe('카테고리를 맞추기 위한 이유 및 과정'),
   result: z.array(
-    z.union([
-      z.object({
-        name: z.string().describe('물건의 이름'),
-        category: z.array(z.string()).describe('알맞는 카테고리(들)')
-      }),
-      z.object({
-        name: z.string().describe('물건의 이름'),
-        error: z.literal(true),
-        errors: z.object({
-          noMatch: z.boolean().describe('물건에 알맞는 카테고리가 없음'),
-          other: z.boolean().describe('기타 오류')
-        })
-      })
-    ])
+    z.object({
+      name: z.string().describe('물건의 이름'),
+      category: z.array(z.string()).describe('알맞는 카테고리(들)')
+    })
   )
 })
 
 export const singleGuideResponseSchema = z.union([
   z.object({
     name: z.string().describe('물건의 이름'),
-    guide: z.array(z.string()).describe('분리배출 방법'),
+    steps: z.array(z.string()).describe('분리배출 방법'),
     tips: z.array(z.string()).optional().describe('분리배출 팁'),
     reference: z.array(z.string()).describe('사용한 분리배출 정보의 이름')
   }),
@@ -71,8 +44,7 @@ export const singleGuideResponseSchema = z.union([
     name: z.string().describe('물건의 이름'),
     error: z.literal(true),
     errors: z.object({
-      notEnough: z.boolean().describe('분리배출 방법이 부족함'),
-      noGuide: z.boolean().describe('물건이 인식되었지만 분리배출 방법이 없음'),
+      noGuide: z.boolean().describe('물건이 인식되었지만 분리배출 방법이 없거나 부족함'),
       other: z.boolean().describe('기타 오류')
     })
   })
